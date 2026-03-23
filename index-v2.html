@@ -99,47 +99,47 @@
 
     const initialTasks = [
       // IRB
-      { id: 1,  category: "IRB",          text: "IRB for NeurIPS",                                                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 2,  category: "IRB",          text: "IRB for Reminiscence & Cancer",                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 3,  category: "IRB",          text: "IRB for Motivational Interviewing",                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 1,  categories: ["IRB"],          text: "IRB for NeurIPS",                                                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 2,  categories: ["IRB"],          text: "IRB for Reminiscence & Cancer",                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 3,  categories: ["IRB"],          text: "IRB for Motivational Interviewing",                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
       // Contacts
-      { id: 4,  category: "Contacts",     text: "Email Chandni Patel — IRB process",                                                          status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 5,  category: "Contacts",     text: "Email Tara Upchurch — volunteers to administer scales (if not self-report)",                 status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 6,  category: "Contacts",     text: "Ding email (10/13)",                                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 7,  category: "Contacts",     text: "Reach out to Pennebaker — reminiscence expert",                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 8,  category: "Contacts",     text: "Speak with others about consensus statement for safety in therapy sessions",                 status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 4,  categories: ["Contacts"],     text: "Email Chandni Patel — IRB process",                                                          status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 5,  categories: ["Contacts"],     text: "Email Tara Upchurch — volunteers to administer scales (if not self-report)",                 status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 6,  categories: ["Contacts"],     text: "Ding email (10/13)",                                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 7,  categories: ["Contacts"],     text: "Reach out to Pennebaker — reminiscence expert",                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 8,  categories: ["Contacts"],     text: "Speak with others about consensus statement for safety in therapy sessions",                 status: "todo", link: null,                                        priority: null, dueDate: "" },
       // Research
-      { id: 9,  category: "Research",     text: "Look up PROMIS outcome scales",                                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 10, category: "Research",     text: "Determine battery of instruments",                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 11, category: "Research",     text: "WET rubric — add detail and sessions",                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 12, category: "Research",     text: "Look into standardized patient bot",                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 13, category: "Research",     text: "Open ended questions",                                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 14, category: "Research",     text: "Nemeroff case report",                                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 15, category: "Research",     text: "APA article — Covidence",                                                                    status: "todo", link: "https://app.covidence.org/",               priority: null, dueDate: "" },
-      { id: 16, category: "Research",     text: "PTSD SMS-based digital review — move ahead alone or find collaborator",                      status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 17, category: "Research",     text: "Look into other LLMs for therapy applications",                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 18, category: "Research",     text: "Find equipoise statements in MI transcripts to exemplify neutral talk",                      status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 19, category: "Research",     text: "Marko materials",                                                                            status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 20, category: "Research",     text: "Mateus paper",                                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 9,  categories: ["Research"],     text: "Look up PROMIS outcome scales",                                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 10, categories: ["Research"],     text: "Determine battery of instruments",                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 11, categories: ["Research"],     text: "WET rubric — add detail and sessions",                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 12, categories: ["Research"],     text: "Look into standardized patient bot",                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 13, categories: ["Research"],     text: "Open ended questions",                                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 14, categories: ["Research"],     text: "Nemeroff case report",                                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 15, categories: ["Research"],     text: "APA article — Covidence",                                                                    status: "todo", link: "https://app.covidence.org/",               priority: null, dueDate: "" },
+      { id: 16, categories: ["Research"],     text: "PTSD SMS-based digital review — move ahead alone or find collaborator",                      status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 17, categories: ["Research"],     text: "Look into other LLMs for therapy applications",                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 18, categories: ["Research"],     text: "Find equipoise statements in MI transcripts to exemplify neutral talk",                      status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 19, categories: ["Research"],     text: "Marko materials",                                                                            status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 20, categories: ["Research"],     text: "Mateus paper",                                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
       // Paper Ideas
-      { id: 21, category: "Paper Ideas",  text: "Embeddings paper",                                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 22, category: "Paper Ideas",  text: "Different LLMs for antidepressant guidelines",                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 21, categories: ["Paper Ideas"],  text: "Embeddings paper",                                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 22, categories: ["Paper Ideas"],  text: "Different LLMs for antidepressant guidelines",                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
       // Reading
-      { id: 24, category: "Reading",      text: "Reminiscence and Recall — Faith Gibson",                                                     status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 25, category: "Reading",      text: "Cognitive Behavior Therapy — Judith Beck",                                                   status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 26, category: "Reading",      text: "Psychodynamic Psychotherapy — Deborah Cabaniss",                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 27, category: "Reading",      text: "Stages of Change (Prochaska)",                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 28, category: "Reading",      text: "Self-Compassion — Kristin Neff",                                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 29, category: "Reading",      text: "Carl Rogers — Theory of 3 Core Conditions for Therapy",                                     status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 30, category: "Reading",      text: "Psychotherapy Relationships That Work",                                                      status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 31, category: "Reading",      text: "On Becoming a Person — Carl Rogers",                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 32, category: "Reading",      text: "Effective Psychotherapists",                                                                 status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 33, category: "Reading",      text: "Supportive psychotherapy guidelines",                                                        status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 24, categories: ["Reading"],      text: "Reminiscence and Recall — Faith Gibson",                                                     status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 25, categories: ["Reading"],      text: "Cognitive Behavior Therapy — Judith Beck",                                                   status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 26, categories: ["Reading"],      text: "Psychodynamic Psychotherapy — Deborah Cabaniss",                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 27, categories: ["Reading"],      text: "Stages of Change (Prochaska)",                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 28, categories: ["Reading"],      text: "Self-Compassion — Kristin Neff",                                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 29, categories: ["Reading"],      text: "Carl Rogers — Theory of 3 Core Conditions for Therapy",                                     status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 30, categories: ["Reading"],      text: "Psychotherapy Relationships That Work",                                                      status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 31, categories: ["Reading"],      text: "On Becoming a Person — Carl Rogers",                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 32, categories: ["Reading"],      text: "Effective Psychotherapists",                                                                 status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 33, categories: ["Reading"],      text: "Supportive psychotherapy guidelines",                                                        status: "todo", link: null,                                        priority: null, dueDate: "" },
       // Videos
-      { id: 23, category: "Videos",       text: "Use YouTube transcripts to generate trauma narratives / train standardized trauma patients", status: "todo", link: null,                                        priority: null, dueDate: "" },
-      { id: 34, category: "Videos",       text: "YouTube: Experiential avoidance — prioritize coaching towards distress",                     status: "todo", link: "https://www.youtube.com/watch?v=p_f9PtWdT0w", priority: null, dueDate: "" },
-      { id: 35, category: "Videos",       text: "YouTube: Trauma patient training video 1",                                                   status: "todo", link: "https://www.youtube.com/watch?v=GxSR1VgVAUk", priority: null, dueDate: "" },
-      { id: 36, category: "Videos",       text: "YouTube: Trauma patient training video 2",                                                   status: "todo", link: "https://www.youtube.com/watch?v=kVec1zg6Pmo", priority: null, dueDate: "" },
+      { id: 23, categories: ["Videos"],       text: "Use YouTube transcripts to generate trauma narratives / train standardized trauma patients", status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 34, categories: ["Videos"],       text: "YouTube: Experiential avoidance — prioritize coaching towards distress",                     status: "todo", link: "https://www.youtube.com/watch?v=p_f9PtWdT0w", priority: null, dueDate: "" },
+      { id: 35, categories: ["Videos"],       text: "YouTube: Trauma patient training video 1",                                                   status: "todo", link: "https://www.youtube.com/watch?v=GxSR1VgVAUk", priority: null, dueDate: "" },
+      { id: 36, categories: ["Videos"],       text: "YouTube: Trauma patient training video 2",                                                   status: "todo", link: "https://www.youtube.com/watch?v=kVec1zg6Pmo", priority: null, dueDate: "" },
     ];
 
     const categoryColors = {
@@ -236,14 +236,23 @@
 
     const initialIds = new Set(initialTasks.map(t => t.id));
 
+    function normalizeCategories(task) {
+      // Backward compat: old data used category (string), new uses categories (array)
+      if (!task.categories) {
+        task.categories = task.category ? [task.category] : [];
+        delete task.category;
+      }
+      return task;
+    }
+
     function loadSavedData() {
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
         const overrides = saved.overrides || {};
-        const customTasks = saved.customTasks || [];
+        const customTasks = (saved.customTasks || []).map(normalizeCategories);
         const base = initialTasks
           .filter(task => !overrides[task.id]?.deleted)
-          .map(task => ({ ...task, ...(overrides[task.id] || {}) }));
+          .map(task => normalizeCategories({ ...task, ...(overrides[task.id] || {}) }));
         return [...base, ...customTasks];
       } catch { return initialTasks; }
     }
@@ -259,6 +268,9 @@
         if (item.priority !== base.priority) diff.priority = item.priority;
         if (item.dueDate  !== base.dueDate)  diff.dueDate  = item.dueDate;
         if (item.text     !== base.text)     diff.text     = item.text;
+        const baseCats = base.categories || [];
+        const itemCats = item.categories || [];
+        if (JSON.stringify([...itemCats].sort()) !== JSON.stringify([...baseCats].sort())) diff.categories = itemCats;
         if (Object.keys(diff).length) overrides[item.id] = diff;
       });
       initialTasks.forEach(task => {
@@ -373,7 +385,7 @@
       });
       const [showAddTask, setShowAddTask]       = useState(false);
       const [newTaskText, setNewTaskText]       = useState("");
-      const [newTaskCategory, setNewTaskCategory] = useState("");
+      const [newTaskCategories, setNewTaskCategories] = useState([]);
       const [newTaskPriority, setNewTaskPriority] = useState("");
       const [newTaskDueDate, setNewTaskDueDate] = useState("");
       const [showAddLabel, setShowAddLabel]     = useState(false);
@@ -381,10 +393,20 @@
       const [newLabelColor, setNewLabelColor]   = useState(COLOR_PRESETS.Pastel[11]); // Blue
       const [editingDate, setEditingDate]       = useState(null);
       const [editingText, setEditingText]       = useState(null);
+      const [editingCategory, setEditingCategory] = useState(null); // taskId with open add-label dropdown
       const [hoveredId, setHoveredId]           = useState(null);
+      const [hoveredLabel, setHoveredLabel]     = useState(null);
+      const [hoveredChip, setHoveredChip]       = useState(null); // "taskId:catName"
+      const [deletedDefaults, setDeletedDefaults] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("research-dashboard-deleted-defaults") || "[]"); }
+        catch { return []; }
+      });
 
+      const activeDefaultColors = Object.fromEntries(
+        Object.entries(categoryColors).filter(([name]) => !deletedDefaults.includes(name))
+      );
       const allCategoryColors = {
-        ...categoryColors,
+        ...activeDefaultColors,
         ...Object.fromEntries(customCategories.map(c => [c.name, { ...c, isCustom: true }])),
       };
 
@@ -402,17 +424,16 @@
 
       const addTask = () => {
         if (!newTaskText.trim()) return;
-        const cat = newTaskCategory || Object.keys(allCategoryColors)[0] || "Research";
         updateItems(prev => [...prev, {
           id: nextCustomId(),
-          category: cat,
+          categories: newTaskCategories,
           text: newTaskText.trim(),
           status: "todo",
           link: null,
           priority: newTaskPriority || null,
           dueDate: newTaskDueDate || "",
         }]);
-        setNewTaskText(""); setNewTaskCategory(""); setNewTaskPriority(""); setNewTaskDueDate("");
+        setNewTaskText(""); setNewTaskCategories([]); setNewTaskPriority(""); setNewTaskDueDate("");
         setShowAddTask(false);
       };
 
@@ -429,6 +450,18 @@
         const updated = customCategories.filter(c => c.name !== name);
         setCustomCategories(updated);
         localStorage.setItem("research-dashboard-categories", JSON.stringify(updated));
+      };
+
+      const deleteDefaultCategory = (name) => {
+        const updated = [...deletedDefaults, name];
+        setDeletedDefaults(updated);
+        localStorage.setItem("research-dashboard-deleted-defaults", JSON.stringify(updated));
+      };
+
+      const restoreDefaultCategory = (name) => {
+        const updated = deletedDefaults.filter(n => n !== name);
+        setDeletedDefaults(updated);
+        localStorage.setItem("research-dashboard-deleted-defaults", JSON.stringify(updated));
       };
 
       const cycleStatus = (id) => {
@@ -455,7 +488,7 @@
 
       const filtered = items
         .filter(item => {
-          const matchCat  = activeCategory === "All" || item.category === activeCategory;
+          const matchCat  = activeCategory === "All" || (item.categories || []).includes(activeCategory);
           const matchStat = activeStatus   === "All" || item.status   === activeStatus;
           const matchPri  = activePriority === "All" || item.priority === activePriority;
           const matchSrch = item.text.toLowerCase().includes(search.toLowerCase());
@@ -478,7 +511,7 @@
       const pct    = Math.round((done / total) * 100);
 
       const grouped = Object.keys(allCategoryColors).reduce((acc, cat) => {
-        acc[cat] = items.filter(i => i.category === cat);
+        acc[cat] = items.filter(i => (i.categories || []).includes(cat));
         return acc;
       }, {});
 
@@ -516,7 +549,6 @@
                     <div style={{display:"flex",flexDirection:"column",gap:"8px",maxHeight:"300px",overflowY:"auto"}}>
                       {reminderTasks.map(item => {
                         const overdue = isOverdue(item.dueDate);
-                        const c = allCategoryColors[item.category] || {bg:"bg-gray-100",text:"text-gray-700",border:"border-gray-200"};
                         return (
                           <div key={item.id} style={{display:"flex",alignItems:"flex-start",gap:"10px",padding:"10px 12px",borderRadius:"10px",border:"1px solid #e5e7eb",background:"#fafafa"}}>
                             <div style={{flexShrink:0,marginTop:"2px"}}>
@@ -525,7 +557,9 @@
                             <div style={{flex:1,minWidth:0}}>
                               <p style={{margin:0,fontSize:"13px",fontWeight:"500",color:"#111827",lineHeight:"1.4"}}>{item.text}</p>
                               <div style={{display:"flex",gap:"6px",marginTop:"5px",flexWrap:"wrap"}}>
-                                <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#f3f4f6",color:"#6b7280"}}>{item.category}</span>
+                                {(item.categories||[]).map(cat => (
+                                  <span key={cat} style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#f3f4f6",color:"#6b7280"}}>{cat}</span>
+                                ))}
                                 {item.priority === "high" && <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#fee2e2",color:"#dc2626"}}>High priority</span>}
                                 {overdue && <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#fff7ed",color:"#ea580c"}}>Overdue</span>}
                                 {item.status === "inprogress" && <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#eff6ff",color:"#2563eb"}}>In progress</span>}
@@ -568,18 +602,40 @@
                   />
                 </div>
 
-                {/* Category */}
+                {/* Labels — toggle pills */}
                 <div style={{marginBottom:"14px"}}>
-                  <label style={{fontSize:"13px",fontWeight:"500",color:"#374151",display:"block",marginBottom:"5px"}}>Label</label>
-                  <select
-                    value={newTaskCategory}
-                    onChange={e => setNewTaskCategory(e.target.value)}
-                    style={{width:"100%",fontSize:"14px",border:"1px solid #d1d5db",borderRadius:"8px",padding:"8px 12px",outline:"none",background:"white",boxSizing:"border-box"}}
-                  >
-                    {Object.keys(allCategoryColors).map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <label style={{fontSize:"13px",fontWeight:"500",color:"#374151",display:"block",marginBottom:"7px"}}>
+                    Labels <span style={{fontWeight:"400",color:"#9ca3af"}}>(optional, pick any)</span>
+                  </label>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:"5px"}}>
+                    {Object.entries(allCategoryColors).map(([cat, cc]) => {
+                      const selected = newTaskCategories.includes(cat);
+                      const toggle = () => setNewTaskCategories(prev =>
+                        prev.includes(cat) ? prev.filter(x => x !== cat) : [...prev, cat]
+                      );
+                      return cc.isCustom ? (
+                        <button key={cat} onClick={toggle} style={{
+                          fontSize:"12px",padding:"3px 10px",borderRadius:"9999px",fontWeight:"500",cursor:"pointer",
+                          background: selected ? cc.text : cc.bg,
+                          color: selected ? "#fff" : cc.text,
+                          border: `1.5px solid ${selected ? cc.text : cc.border}`,
+                          outline: selected ? `2px solid ${cc.text}` : "none", outlineOffset:"1px",
+                        }}>{cat}</button>
+                      ) : (
+                        <button key={cat} onClick={toggle}
+                          className={selected ? "" : `${cc.bg} ${cc.text}`}
+                          style={{
+                            fontSize:"12px",padding:"3px 10px",borderRadius:"9999px",fontWeight:"500",cursor:"pointer",
+                            ...(selected ? {background:"#7c3aed",color:"white",border:"1.5px solid #7c3aed"} : {border:"1.5px solid transparent"}),
+                          }}>{cat}</button>
+                      );
+                    })}
+                  </div>
+                  {newTaskCategories.length > 0 && (
+                    <button onClick={() => setNewTaskCategories([])} style={{marginTop:"6px",fontSize:"11px",color:"#9ca3af",background:"none",border:"none",cursor:"pointer",padding:0}}>
+                      Clear all
+                    </button>
+                  )}
                 </div>
 
                 <div style={{display:"flex",gap:"12px",marginBottom:"20px"}}>
@@ -752,28 +808,67 @@
               <div style={{marginTop:"18px",paddingTop:"18px",borderTop:"1px solid #e5e7eb"}}>
                 <div style={{fontWeight:"600",fontSize:"14px",color:"#374151",marginBottom:"10px"}}>Labels</div>
 
-                {/* All labels: default (locked) + custom (deletable) */}
+                {/* All labels — hover to reveal × */}
                 <div style={{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"12px"}}>
-                  {/* Default labels — locked, shown for reference */}
-                  {Object.entries(categoryColors).map(([name, c]) => (
-                    <span key={name} className={`text-xs px-2 py-1 rounded-full font-medium ${c.bg} ${c.text}`}
-                      title="Built-in label" style={{opacity:0.8}}>
+                  {/* Default labels */}
+                  {Object.entries(categoryColors).filter(([name]) => !deletedDefaults.includes(name)).map(([name, c]) => (
+                    <span key={name}
+                      onMouseEnter={() => setHoveredLabel(name)}
+                      onMouseLeave={() => setHoveredLabel(null)}
+                      className={`text-xs rounded-full font-medium ${c.bg} ${c.text}`}
+                      style={{display:"inline-flex",alignItems:"center",gap:"3px",padding:"3px 8px",cursor:"default",position:"relative"}}
+                    >
                       {name}
+                      <button
+                        onClick={() => deleteDefaultCategory(name)}
+                        title="Remove label"
+                        style={{
+                          background:"none",border:"none",cursor:"pointer",padding:"0 0 0 1px",
+                          fontSize:"13px",lineHeight:1,fontWeight:"bold",
+                          opacity: hoveredLabel === name ? 0.7 : 0,
+                          transition:"opacity 0.15s",
+                        }}
+                      >×</button>
                     </span>
                   ))}
-                  {/* Custom labels — deletable */}
+                  {/* Custom labels */}
                   {customCategories.map(c => (
-                    <span key={c.name} style={{
-                      display:"inline-flex",alignItems:"center",gap:"4px",
-                      fontSize:"12px",padding:"3px 8px",borderRadius:"9999px",fontWeight:"500",
-                      background:c.bg,color:c.text,border:`1px solid ${c.border}`,
-                    }}>
+                    <span key={c.name}
+                      onMouseEnter={() => setHoveredLabel(c.name)}
+                      onMouseLeave={() => setHoveredLabel(null)}
+                      style={{
+                        display:"inline-flex",alignItems:"center",gap:"3px",
+                        fontSize:"12px",padding:"3px 8px",borderRadius:"9999px",fontWeight:"500",
+                        background:c.bg,color:c.text,border:`1px solid ${c.border}`,
+                      }}
+                    >
                       {c.name}
                       <button
                         onClick={() => deleteCustomCategory(c.name)}
                         title="Remove label"
-                        style={{background:"none",border:"none",cursor:"pointer",padding:"0 0 0 2px",fontSize:"13px",color:c.text,lineHeight:1,opacity:0.65,fontWeight:"bold"}}
+                        style={{
+                          background:"none",border:"none",cursor:"pointer",padding:"0 0 0 1px",
+                          fontSize:"13px",lineHeight:1,fontWeight:"bold",color:c.text,
+                          opacity: hoveredLabel === c.name ? 0.7 : 0,
+                          transition:"opacity 0.15s",
+                        }}
                       >×</button>
+                    </span>
+                  ))}
+                  {/* Deleted defaults — restore option */}
+                  {deletedDefaults.map(name => (
+                    <span key={name}
+                      title="Click to restore"
+                      onClick={() => restoreDefaultCategory(name)}
+                      style={{
+                        display:"inline-flex",alignItems:"center",gap:"4px",
+                        fontSize:"12px",padding:"3px 8px",borderRadius:"9999px",fontWeight:"500",
+                        background:"#f3f4f6",color:"#9ca3af",border:"1px dashed #d1d5db",
+                        cursor:"pointer",textDecoration:"line-through",
+                      }}
+                    >
+                      {name}
+                      <span style={{fontSize:"11px",textDecoration:"none"}}>↩</span>
                     </span>
                   ))}
                 </div>
@@ -952,7 +1047,6 @@
                 </div>
               )}
               {filtered.map(item => {
-                const c = allCategoryColors[item.category] || allCategoryColors[Object.keys(allCategoryColors)[0]];
                 const s = statusStyles[item.status];
                 const p = item.priority ? priorityConfig[item.priority] : null;
                 const overdue = isOverdue(item.dueDate) && item.status !== "done";
@@ -1081,16 +1175,75 @@
                       {s.label}
                     </span>
 
-                    {/* Category badge */}
-                    {c.isCustom ? (
-                      <span style={{flexShrink:0,fontSize:"12px",padding:"2px 8px",borderRadius:"9999px",fontWeight:"500",background:c.bg,color:c.text,border:`1px solid ${c.border}`}}>
-                        {item.category}
-                      </span>
-                    ) : (
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${c.bg} ${c.text}`} style={{flexShrink:0}}>
-                        {item.category}
-                      </span>
-                    )}
+                    {/* Category badges — multi-label */}
+                    <div style={{display:"flex",flexWrap:"wrap",gap:"4px",alignItems:"center",flexShrink:0}}>
+                      {(item.categories || []).map(cat => {
+                        const cc = allCategoryColors[cat];
+                        const chipKey = `${item.id}:${cat}`;
+                        const isHovered = hoveredChip === chipKey;
+                        if (!cc) return null;
+                        return cc.isCustom ? (
+                          <span
+                            key={cat}
+                            onMouseEnter={() => setHoveredChip(chipKey)}
+                            onMouseLeave={() => setHoveredChip(null)}
+                            style={{display:"inline-flex",alignItems:"center",gap:"2px",fontSize:"12px",padding:"2px 7px",borderRadius:"9999px",fontWeight:"500",background:cc.bg,color:cc.text,border:`1px solid ${cc.border}`,cursor:"default"}}
+                          >
+                            {cat}
+                            <button
+                              onClick={() => updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: t.categories.filter(x => x !== cat) } : t))}
+                              style={{background:"none",border:"none",cursor:"pointer",padding:"0",fontSize:"13px",lineHeight:1,fontWeight:"bold",color:cc.text,opacity:isHovered?0.7:0,transition:"opacity 0.1s"}}
+                            >×</button>
+                          </span>
+                        ) : (
+                          <span
+                            key={cat}
+                            onMouseEnter={() => setHoveredChip(chipKey)}
+                            onMouseLeave={() => setHoveredChip(null)}
+                            className={`text-xs rounded-full font-medium ${cc.bg} ${cc.text}`}
+                            style={{display:"inline-flex",alignItems:"center",gap:"2px",padding:"2px 7px",cursor:"default"}}
+                          >
+                            {cat}
+                            <button
+                              onClick={() => updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: t.categories.filter(x => x !== cat) } : t))}
+                              style={{background:"none",border:"none",cursor:"pointer",padding:"0",fontSize:"13px",lineHeight:1,fontWeight:"bold",opacity:isHovered?0.7:0,transition:"opacity 0.1s"}}
+                            >×</button>
+                          </span>
+                        );
+                      })}
+                      {/* Add label button / dropdown */}
+                      {editingCategory === item.id ? (
+                        <select
+                          autoFocus
+                          defaultValue=""
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val && !(item.categories || []).includes(val)) {
+                              updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: [...(t.categories||[]), val] } : t));
+                            }
+                            setEditingCategory(null);
+                          }}
+                          onBlur={() => setEditingCategory(null)}
+                          style={{fontSize:"12px",border:"1px solid #a855f7",borderRadius:"7px",padding:"2px 6px",outline:"none",background:"white",cursor:"pointer"}}
+                        >
+                          <option value="" disabled>Add label…</option>
+                          {Object.keys(allCategoryColors).filter(cat => !(item.categories||[]).includes(cat)).map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          onClick={() => setEditingCategory(item.id)}
+                          title="Add label"
+                          style={{
+                            fontSize:"11px",padding:"2px 6px",borderRadius:"9999px",cursor:"pointer",
+                            border:"1px dashed #d1d5db",background:"transparent",color:"#9ca3af",lineHeight:"1.4",
+                            opacity: hoveredId === item.id || (item.categories||[]).length === 0 ? 1 : 0,
+                            transition:"opacity 0.15s",
+                          }}
+                        >{(item.categories||[]).length === 0 ? "+ label" : "+"}</button>
+                      )}
+                    </div>
 
                     {/* Delete button — visible on hover */}
                     <button
