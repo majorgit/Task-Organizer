@@ -40,7 +40,7 @@
       const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
       return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
     }
-    const CORRECT = "8a2a7a19f69ee23b15f44617012498d1d9048c06b4b0be18ded89ffd90a81b21"; // Claude123!
+    const CORRECT = "33a82eaa94390a19d88e1e2f9663b96bd4bd4cf8a6274627171aaf33acb7adac"; // Claude123!
     async function checkPw() {
       const val = document.getElementById("pw-input").value;
       const hash = await sha256(val);
@@ -72,7 +72,7 @@
     }
 
     async function fetchFromCloud(url) {
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect: "follow" });
       if (!res.ok) throw new Error("Fetch failed");
       return await res.json();
     }
@@ -80,8 +80,9 @@
     async function pushToCloud(url, overrides) {
       await fetch(url, {
         method: "POST",
+        redirect: "follow",
         body: JSON.stringify({ overrides }),
-        headers: { "Content-Type": "text/plain" }, // Apps Script needs text/plain for doPost
+        headers: { "Content-Type": "text/plain" },
       });
     }
 
