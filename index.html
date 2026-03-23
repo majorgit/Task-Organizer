@@ -284,7 +284,7 @@
       const [activeStatus, setActiveStatus]     = useState("All");
       const [activePriority, setActivePriority] = useState("All");
       const [search, setSearch]                 = useState("");
-      const [sortBy, setSortBy]                 = useState("default");
+      const [sortBy, setSortBy]                 = useState(() => localStorage.getItem("research-dashboard-sort") || "default");
       const [editingDate, setEditingDate]       = useState(null);
       const [editingText, setEditingText]       = useState(null);
       const [hoveredId, setHoveredId]           = useState(null);
@@ -502,7 +502,7 @@
                 <span className="text-xs text-gray-500">Sort:</span>
                 <select
                   value={sortBy}
-                  onChange={e => setSortBy(e.target.value)}
+                  onChange={e => { setSortBy(e.target.value); localStorage.setItem("research-dashboard-sort", e.target.value); }}
                   className="text-sm border border-gray-200 rounded-lg px-2 py-1 bg-white"
                 >
                   <option value="default">Default</option>
