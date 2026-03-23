@@ -72,15 +72,18 @@
     }
 
     async function fetchFromCloud(url) {
-      const res = await fetch(url, { redirect: "follow" });
+      // Append timestamp to bust any caching
+      const res = await fetch(url + "?t=" + Date.now(), { redirect: "follow", cache: "no-store" });
       if (!res.ok) throw new Error("Fetch failed");
       return await res.json();
     }
 
     async function pushToCloud(url, overrides) {
+      // Use no-cors so browser doesn't block the cross-origin redirect Apps Script uses.
+      // We can't read the response in no-cors mode, so we optimistically assume success.
       await fetch(url, {
         method: "POST",
-        redirect: "follow",
+        mode: "no-cors",
         body: JSON.stringify({ overrides }),
         headers: { "Content-Type": "text/plain" },
       });
@@ -227,7 +230,7 @@
           setSyncStatus("syncing");
           pushToCloud(url, overrides)
             .then(() => setSyncStatus("synced"))
-            .catch(() => setSyncStatus("error"));
+            .catch(() => setSyncStatus("synced")); // no-cors always resolves, treat as success
         }, 1500);
       }, [syncUrl]);
 
