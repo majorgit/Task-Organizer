@@ -1182,32 +1182,40 @@
                         const chipKey = `${item.id}:${cat}`;
                         const isHovered = hoveredChip === chipKey;
                         if (!cc) return null;
+                        const pillBase = {
+                          position:"relative", display:"inline-block",
+                          fontSize:"12px", padding:"2px 7px", borderRadius:"9999px",
+                          fontWeight:"500", cursor:"default", whiteSpace:"nowrap",
+                        };
+                        const xStyle = {
+                          position:"absolute", top:"-5px", right:"-5px",
+                          width:"13px", height:"13px", borderRadius:"50%",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:"9px", fontWeight:"700", lineHeight:1,
+                          cursor:"pointer", border:"none",
+                          background: cc.isCustom ? cc.text : "#6b7280",
+                          color:"white",
+                          opacity: isHovered ? 1 : 0,
+                          transition:"opacity 0.1s",
+                        };
                         return cc.isCustom ? (
-                          <span
-                            key={cat}
+                          <span key={cat}
                             onMouseEnter={() => setHoveredChip(chipKey)}
                             onMouseLeave={() => setHoveredChip(null)}
-                            style={{display:"inline-flex",alignItems:"center",gap:"2px",fontSize:"12px",padding:"2px 7px",borderRadius:"9999px",fontWeight:"500",background:cc.bg,color:cc.text,border:`1px solid ${cc.border}`,cursor:"default"}}
+                            style={{...pillBase, background:cc.bg, color:cc.text, border:`1px solid ${cc.border}`}}
                           >
                             {cat}
-                            <button
-                              onClick={() => updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: t.categories.filter(x => x !== cat) } : t))}
-                              style={{background:"none",border:"none",cursor:"pointer",padding:"0",fontSize:"13px",lineHeight:1,fontWeight:"bold",color:cc.text,opacity:isHovered?0.7:0,transition:"opacity 0.1s"}}
-                            >×</button>
+                            <button onClick={() => updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: t.categories.filter(x => x !== cat) } : t))} style={xStyle}>×</button>
                           </span>
                         ) : (
-                          <span
-                            key={cat}
+                          <span key={cat}
                             onMouseEnter={() => setHoveredChip(chipKey)}
                             onMouseLeave={() => setHoveredChip(null)}
-                            className={`text-xs rounded-full font-medium ${cc.bg} ${cc.text}`}
-                            style={{display:"inline-flex",alignItems:"center",gap:"2px",padding:"2px 7px",cursor:"default"}}
+                            className={`rounded-full font-medium ${cc.bg} ${cc.text}`}
+                            style={pillBase}
                           >
                             {cat}
-                            <button
-                              onClick={() => updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: t.categories.filter(x => x !== cat) } : t))}
-                              style={{background:"none",border:"none",cursor:"pointer",padding:"0",fontSize:"13px",lineHeight:1,fontWeight:"bold",opacity:isHovered?0.7:0,transition:"opacity 0.1s"}}
-                            >×</button>
+                            <button onClick={() => updateItems(prev => prev.map(t => t.id === item.id ? { ...t, categories: t.categories.filter(x => x !== cat) } : t))} style={xStyle}>×</button>
                           </span>
                         );
                       })}
@@ -1238,21 +1246,21 @@
                           style={{
                             fontSize:"11px",padding:"2px 6px",borderRadius:"9999px",cursor:"pointer",
                             border:"1px dashed #d1d5db",background:"transparent",color:"#9ca3af",lineHeight:"1.4",
-                            opacity: hoveredId === item.id || (item.categories||[]).length === 0 ? 1 : 0,
+                            opacity: hoveredId === item.id ? 1 : 0.25,
                             transition:"opacity 0.15s",
                           }}
                         >{(item.categories||[]).length === 0 ? "+ label" : "+"}</button>
                       )}
                     </div>
 
-                    {/* Delete button — visible on hover */}
+                    {/* Delete button */}
                     <button
                       onClick={() => deleteItem(item.id)}
                       title="Delete task"
                       style={{
                         flexShrink:0, background:"none", border:"none", cursor:"pointer",
                         fontSize:"15px", padding:"2px 4px", borderRadius:"6px", lineHeight:1,
-                        opacity: hoveredId === item.id ? 1 : 0,
+                        opacity: hoveredId === item.id ? 1 : 0.25,
                         transition: "opacity 0.15s",
                         color: "#ef4444",
                       }}
