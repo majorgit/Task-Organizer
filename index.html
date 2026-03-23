@@ -181,7 +181,9 @@
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
         if (!saved.overrides) return initialTasks;
-        return initialTasks.map(task => ({ ...task, ...(saved.overrides[task.id] || {}) }));
+        return initialTasks
+          .filter(task => !saved.overrides[task.id]?.deleted)
+          .map(task => ({ ...task, ...(saved.overrides[task.id] || {}) }));
       } catch { return initialTasks; }
     }
 
@@ -189,12 +191,19 @@
       const overrides = {};
       items.forEach(item => {
         const base = initialTasks.find(t => t.id === item.id);
+        if (!base) return;
         const diff = {};
         if (item.status   !== base.status)   diff.status   = item.status;
         if (item.priority !== base.priority) diff.priority = item.priority;
         if (item.dueDate  !== base.dueDate)  diff.dueDate  = item.dueDate;
         if (item.text     !== base.text)     diff.text     = item.text;
         if (Object.keys(diff).length) overrides[item.id] = diff;
+      });
+      // Mark items removed from initialTasks as deleted
+      initialTasks.forEach(task => {
+        if (!items.find(i => i.id === task.id)) {
+          overrides[task.id] = { deleted: true };
+        }
       });
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ overrides }));
     }
