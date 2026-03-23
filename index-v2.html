@@ -315,18 +315,34 @@
           .then(data => {
             if (data && (data.overrides || data.customTasks)) {
               const overrides = data.overrides || {};
-              const cloudCustomTasks = data.customTasks || [];
+              const cloudCustomTasks = (data.customTasks || []).map(normalizeCategories);
+              // Merge: cloud wins for initial tasks; for custom tasks keep local-only ones
+              const localCustomTasks = loadSavedData().filter(i => !initialIds.has(i.id));
+              const cloudIds = new Set(cloudCustomTasks.map(t => t.id));
+              const localOnlyTasks = localCustomTasks.filter(t => !cloudIds.has(t.id));
               const merged = [
                 ...initialTasks
                   .filter(task => !overrides[task.id]?.deleted)
-                  .map(task => ({ ...task, ...(overrides[task.id] || {}) })),
+                  .map(task => normalizeCategories({ ...task, ...(overrides[task.id] || {}) })),
                 ...cloudCustomTasks,
+                ...localOnlyTasks, // preserve tasks added locally but not yet pushed
               ];
               setItems(merged);
               saveOverrides(merged);
-              if (data.customCategories?.length) {
-                setCustomCategories(data.customCategories);
-                localStorage.setItem("research-dashboard-categories", JSON.stringify(data.customCategories));
+              if (data.customCategories) {
+                // Merge cloud categories into local workspace categories
+                setCustomCategoriesAll(prev => {
+                  const updated = { ...prev };
+                  Object.entries(data.customCategories).forEach(([ws, cats]) => {
+                    if (Array.isArray(cats)) updated[ws] = cats;
+                  });
+                  // Handle old flat-array format from cloud
+                  if (Array.isArray(data.customCategories)) {
+                    updated.Research = data.customCategories;
+                  }
+                  localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updated));
+                  return updated;
+                });
               }
             }
             setSyncStatus("synced");
@@ -1025,15 +1041,20 @@
                   return (
                     <div style={{background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:"10px",padding:"14px",display:"flex",flexDirection:"column",gap:"12px"}}>
                       {isEdit && (
-                        <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"2px"}}>
-                          {customCategories.map(c => (
-                            <button key={c.name} onClick={() => openEditLabel(c)} style={{
-                              fontSize:"12px",padding:"2px 10px",borderRadius:"9999px",fontWeight:"500",cursor:"pointer",
-                              background: editingLabelName===c.name ? c.text : c.bg,
-                              color: editingLabelName===c.name ? "#fff" : c.text,
-                              border:`1.5px solid ${c.border}`,
-                            }}>{c.name}</button>
-                          ))}
+                        <div>
+                          <div style={{fontSize:"12px",color:"#6b7280",marginBottom:"5px"}}>Label to edit</div>
+                          <select
+                            value={editingLabelName}
+                            onChange={e => {
+                              const c = customCategories.find(x => x.name === e.target.value);
+                              if (c) openEditLabel(c);
+                            }}
+                            style={{width:"100%",fontSize:"13px",border:"1px solid #d1d5db",borderRadius:"7px",padding:"6px 10px",outline:"none",background:"white",cursor:"pointer"}}
+                          >
+                            {customCategories.map(c => (
+                              <option key={c.name} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
                         </div>
                       )}
                       <input
