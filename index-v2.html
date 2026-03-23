@@ -430,6 +430,10 @@
       const [showAddLabel, setShowAddLabel]     = useState(false);
       const [newLabelName, setNewLabelName]     = useState("");
       const [newLabelColor, setNewLabelColor]   = useState(COLOR_PRESETS.Pastel[11]); // Blue
+      const [showEditLabel, setShowEditLabel]   = useState(false);
+      const [editingLabelName, setEditingLabelName] = useState("");   // original name (key)
+      const [editLabelNewName, setEditLabelNewName] = useState("");
+      const [editLabelNewColor, setEditLabelNewColor] = useState(COLOR_PRESETS.Pastel[11]);
       const [editingDate, setEditingDate]       = useState(null);
       const [editingText, setEditingText]       = useState(null);
       const [editingCategory, setEditingCategory] = useState(null); // taskId with open add-label dropdown
@@ -497,6 +501,36 @@
         const updated = { ...customCategoriesAll, [activeWorkspace]: customCategories.filter(c => c.name !== name) };
         setCustomCategoriesAll(updated);
         localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updated));
+      };
+
+      const openEditLabel = (cat) => {
+        setEditingLabelName(cat.name);
+        setEditLabelNewName(cat.name);
+        setEditLabelNewColor({ label: cat.label || cat.name, bg: cat.bg, text: cat.text, border: cat.border });
+        setShowEditLabel(true);
+        setShowAddLabel(false);
+      };
+
+      const saveEditCustomCategory = () => {
+        const newName = editLabelNewName.trim();
+        if (!newName) return;
+        const oldName = editingLabelName;
+        // Update customCategoriesAll
+        const updatedCats = { ...customCategoriesAll, [activeWorkspace]: customCategories.map(c =>
+          c.name === oldName ? { ...editLabelNewColor, name: newName, isCustom: true } : c
+        )};
+        setCustomCategoriesAll(updatedCats);
+        localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updatedCats));
+        // Rename label in all tasks in this workspace
+        if (newName !== oldName) {
+          updateItems(prev => prev.map(t =>
+            (t.workspace || "Research") === activeWorkspace && (t.categories || []).includes(oldName)
+              ? { ...t, categories: t.categories.map(c => c === oldName ? newName : c) }
+              : t
+          ));
+        }
+        setShowEditLabel(false);
+        setEditingLabelName("");
       };
 
       const deleteDefaultCategory = (name) => {
@@ -974,75 +1008,109 @@
                   ))}
                 </div>
 
-                {/* Add new label */}
-                {showAddLabel ? (
-                  <div style={{background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:"10px",padding:"14px",display:"flex",flexDirection:"column",gap:"12px"}}>
-                    <input
-                      type="text"
-                      placeholder="Label name…"
-                      value={newLabelName}
-                      onChange={e => setNewLabelName(e.target.value)}
-                      onKeyDown={e => { if (e.key === "Enter") addCustomCategory(); if (e.key === "Escape") setShowAddLabel(false); }}
-                      autoFocus
-                      style={{fontSize:"13px",border:"1px solid #d1d5db",borderRadius:"7px",padding:"6px 10px",outline:"none"}}
-                    />
-                    <div>
-                      <div style={{fontSize:"12px",color:"#6b7280",marginBottom:"8px"}}>Color</div>
-                      {Object.entries(COLOR_PRESETS).map(([paletteName, palette]) => (
-                        <div key={paletteName} style={{marginBottom:"8px"}}>
-                          <div style={{fontSize:"11px",color:"#9ca3af",marginBottom:"4px",fontWeight:"500",letterSpacing:"0.05em",textTransform:"uppercase"}}>{paletteName}</div>
-                          <div style={{display:"flex",flexWrap:"wrap",gap:"4px"}}>
-                            {palette.map(preset => (
-                              <button
-                                key={preset.label}
-                                title={preset.label}
-                                onClick={() => setNewLabelColor(preset)}
-                                style={{
-                                  width:"20px",height:"20px",borderRadius:"50%",cursor:"pointer",flexShrink:0,
-                                  background:preset.bg,
-                                  border: newLabelColor.label === preset.label ? `3px solid ${preset.text}` : `2px solid ${preset.border}`,
-                                  outline: newLabelColor.label === preset.label ? `2px solid ${preset.text}` : "none",
-                                  outlineOffset:"2px",
-                                  transition:"transform 0.1s",
-                                  transform: newLabelColor.label === preset.label ? "scale(1.25)" : "scale(1)",
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                      {newLabelName.trim() && (
-                        <div style={{marginTop:"8px",display:"flex",alignItems:"center",gap:"8px"}}>
-                          <span style={{fontSize:"12px",color:"#6b7280"}}>Preview:</span>
-                          <span style={{
-                            fontSize:"12px",padding:"2px 10px",borderRadius:"9999px",fontWeight:"500",
-                            background:newLabelColor.bg,color:newLabelColor.text,border:`1px solid ${newLabelColor.border}`,
-                          }}>{newLabelName.trim()}</span>
+                {/* Add / Edit label forms */}
+                {(showAddLabel || showEditLabel) ? (() => {
+                  const isEdit = showEditLabel;
+                  const labelName    = isEdit ? editLabelNewName    : newLabelName;
+                  const setLabelName = isEdit ? setEditLabelNewName : setNewLabelName;
+                  const labelColor   = isEdit ? editLabelNewColor   : newLabelColor;
+                  const setLabelColor= isEdit ? setEditLabelNewColor: setNewLabelColor;
+                  const onSave       = isEdit ? saveEditCustomCategory : addCustomCategory;
+                  const onCancel     = isEdit
+                    ? () => { setShowEditLabel(false); setEditingLabelName(""); }
+                    : () => { setShowAddLabel(false); setNewLabelName(""); };
+                  const canSave = labelName.trim() &&
+                    (!isEdit || labelName.trim() !== editingLabelName ||
+                      labelColor.bg !== customCategories.find(c=>c.name===editingLabelName)?.bg);
+                  return (
+                    <div style={{background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:"10px",padding:"14px",display:"flex",flexDirection:"column",gap:"12px"}}>
+                      {isEdit && (
+                        <div style={{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"2px"}}>
+                          {customCategories.map(c => (
+                            <button key={c.name} onClick={() => openEditLabel(c)} style={{
+                              fontSize:"12px",padding:"2px 10px",borderRadius:"9999px",fontWeight:"500",cursor:"pointer",
+                              background: editingLabelName===c.name ? c.text : c.bg,
+                              color: editingLabelName===c.name ? "#fff" : c.text,
+                              border:`1.5px solid ${c.border}`,
+                            }}>{c.name}</button>
+                          ))}
                         </div>
                       )}
+                      <input
+                        type="text"
+                        placeholder={isEdit ? "Rename label…" : "Label name…"}
+                        value={labelName}
+                        onChange={e => setLabelName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && canSave) onSave(); if (e.key === "Escape") onCancel(); }}
+                        autoFocus={!isEdit}
+                        style={{fontSize:"13px",border:"1px solid #d1d5db",borderRadius:"7px",padding:"6px 10px",outline:"none"}}
+                      />
+                      <div>
+                        <div style={{fontSize:"12px",color:"#6b7280",marginBottom:"8px"}}>Color</div>
+                        {Object.entries(COLOR_PRESETS).map(([paletteName, palette]) => (
+                          <div key={paletteName} style={{marginBottom:"8px"}}>
+                            <div style={{fontSize:"11px",color:"#9ca3af",marginBottom:"4px",fontWeight:"500",letterSpacing:"0.05em",textTransform:"uppercase"}}>{paletteName}</div>
+                            <div style={{display:"flex",flexWrap:"wrap",gap:"4px"}}>
+                              {palette.map(preset => (
+                                <button
+                                  key={preset.label}
+                                  title={preset.label}
+                                  onClick={() => setLabelColor(preset)}
+                                  style={{
+                                    width:"20px",height:"20px",borderRadius:"50%",cursor:"pointer",flexShrink:0,
+                                    background:preset.bg,
+                                    border: labelColor.label === preset.label ? `3px solid ${preset.text}` : `2px solid ${preset.border}`,
+                                    outline: labelColor.label === preset.label ? `2px solid ${preset.text}` : "none",
+                                    outlineOffset:"2px",
+                                    transition:"transform 0.1s",
+                                    transform: labelColor.label === preset.label ? "scale(1.25)" : "scale(1)",
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        {labelName.trim() && (
+                          <div style={{marginTop:"8px",display:"flex",alignItems:"center",gap:"8px"}}>
+                            <span style={{fontSize:"12px",color:"#6b7280"}}>Preview:</span>
+                            <span style={{
+                              fontSize:"12px",padding:"2px 10px",borderRadius:"9999px",fontWeight:"500",
+                              background:labelColor.bg,color:labelColor.text,border:`1px solid ${labelColor.border}`,
+                            }}>{labelName.trim()}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{display:"flex",gap:"6px"}}>
+                        <button
+                          onClick={onSave}
+                          disabled={!canSave}
+                          style={{
+                            fontSize:"13px",padding:"5px 14px",borderRadius:"7px",cursor:"pointer",fontWeight:"500",
+                            background: canSave ? accentColor : "#e5e7eb",
+                            color: canSave ? "white" : "#9ca3af",
+                            border:"none",
+                          }}
+                        >{isEdit ? "Save changes" : "Add label"}</button>
+                        <button
+                          onClick={onCancel}
+                          style={{fontSize:"13px",padding:"5px 10px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px solid #e5e7eb",color:"#6b7280"}}
+                        >Cancel</button>
+                      </div>
                     </div>
-                    <div style={{display:"flex",gap:"6px"}}>
+                  );
+                })() : (
+                  <div style={{display:"flex",gap:"6px"}}>
+                    <button
+                      onClick={() => { setShowAddLabel(true); setShowEditLabel(false); }}
+                      style={{fontSize:"13px",padding:"5px 12px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px dashed #d1d5db",color:"#6b7280",display:"flex",alignItems:"center",gap:"4px"}}
+                    >+ New label</button>
+                    {customCategories.length > 0 && (
                       <button
-                        onClick={addCustomCategory}
-                        disabled={!newLabelName.trim()}
-                        style={{
-                          fontSize:"13px",padding:"5px 14px",borderRadius:"7px",cursor:"pointer",fontWeight:"500",
-                          background: newLabelName.trim() ? accentColor : "#e5e7eb",
-                          color: newLabelName.trim() ? "white" : "#9ca3af",
-                          border:"none",
-                        }}
-                      >Add label</button>
-                      <button
-                        onClick={() => { setShowAddLabel(false); setNewLabelName(""); }}
-                        style={{fontSize:"13px",padding:"5px 10px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px solid #e5e7eb",color:"#6b7280"}}
-                      >Cancel</button>
-                    </div>
+                        onClick={() => { openEditLabel(customCategories[0]); }}
+                        style={{fontSize:"13px",padding:"5px 12px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px solid #e5e7eb",color:"#6b7280",display:"flex",alignItems:"center",gap:"4px"}}
+                      >✏️ Edit label</button>
+                    )}
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setShowAddLabel(true)}
-                    style={{fontSize:"13px",padding:"5px 12px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px dashed #d1d5db",color:"#6b7280",display:"flex",alignItems:"center",gap:"4px"}}
-                  >+ New label</button>
                 )}
               </div>
 
