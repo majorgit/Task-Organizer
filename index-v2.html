@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research Task Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" />
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; }
+    .hover\:brightness-95:hover { filter: brightness(0.95); }
+  </style>
+</head>
+<body>
+  <!-- Password gate -->
+  <div id="gate" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f9fafb;">
+    <div style="background:white;border:1px solid #e5e7eb;border-radius:16px;padding:40px;width:320px;box-shadow:0 4px 24px rgba(0,0,0,0.07);text-align:center;">
+      <div style="font-size:32px;margin-bottom:12px;">🔒</div>
+      <h1 style="font-size:18px;font-weight:700;color:#111827;margin-bottom:4px;">Research Dashboard</h1>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">Enter your password to continue</p>
+      <input id="pw-input" type="password" placeholder="Password"
+        style="width:100%;border:1px solid #d1d5db;border-radius:8px;padding:9px 12px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;"
+        onkeydown="if(event.key==='Enter') checkPw()"
+      />
+      <div id="pw-error" style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none;">Incorrect password, try again.</div>
+      <button onclick="checkPw()"
+        style="width:100%;background:#7c3aed;color:white;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;">
+        Unlock
+      </button>
+    </div>
+  </div>
+
+  <div id="root" style="display:none;"></div>
+
+  <script>
+    const HASH_KEY = "rdash-auth";
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+    const CORRECT = "33a82eaa94390a19d88e1e2f9663b96bd4bd4cf8a6274627171aaf33acb7adac"; // Claude123!
+    async function checkPw() {
+      const val = document.getElementById("pw-input").value;
+      const hash = await sha256(val);
+      if (hash === CORRECT) {
+        sessionStorage.setItem(HASH_KEY, "1");
+        unlock();
+      } else {
+        document.getElementById("pw-error").style.display = "block";
+        document.getElementById("pw-input").value = "";
+        document.getElementById("pw-input").focus();
+      }
+    }
+    function unlock() {
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("root").style.display = "block";
+    }
+    // Stay unlocked within the same browser session
+    if (sessionStorage.getItem(HASH_KEY) === "1") unlock();
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ── Cloud sync helpers ──────────────────────────────────────
+    const SYNC_URL_KEY = "research-dashboard-sync-url";
+
+    const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbw5GMis4JeZNBnfWmiOaKAfIBb-ljUt7kT4A9abRJSUKtamumBFhBbW5XfAOlCDk7Faww/exec";
+
+    function getSyncUrl() {
+      return localStorage.getItem(SYNC_URL_KEY) || DEFAULT_SYNC_URL;
+    }
+
+    async function fetchFromCloud(url) {
+      // Append timestamp to bust any caching
+      const res = await fetch(url + "?t=" + Date.now(), { redirect: "follow", cache: "no-store" });
+      if (!res.ok) throw new Error("Fetch failed");
+      return await res.json();
+    }
+
+    async function pushToCloud(url, overrides) {
+      // Use no-cors so browser doesn't block the cross-origin redirect Apps Script uses.
+      // We can't read the response in no-cors mode, so we optimistically assume success.
+      await fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ overrides }),
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+
+    // Debounce helper
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    const initialTasks = [
+      // IRB
+      { id: 1,  category: "IRB",          text: "IRB for NeurIPS",                                                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 2,  category: "IRB",          text: "IRB for Reminiscence & Cancer",                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 3,  category: "IRB",          text: "IRB for Motivational Interviewing",                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
+      // Contacts
+      { id: 4,  category: "Contacts",     text: "Email Chandni Patel — IRB process",                                                          status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 5,  category: "Contacts",     text: "Email Tara Upchurch — volunteers to administer scales (if not self-report)",                 status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 6,  category: "Contacts",     text: "Ding email (10/13)",                                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 7,  category: "Contacts",     text: "Reach out to Pennebaker — reminiscence expert",                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 8,  category: "Contacts",     text: "Speak with others about consensus statement for safety in therapy sessions",                 status: "todo", link: null,                                        priority: null, dueDate: "" },
+      // Research
+      { id: 9,  category: "Research",     text: "Look up PROMIS outcome scales",                                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 10, category: "Research",     text: "Determine battery of instruments",                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 11, category: "Research",     text: "WET rubric — add detail and sessions",                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 12, category: "Research",     text: "Look into standardized patient bot",                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 13, category: "Research",     text: "Open ended questions",                                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 14, category: "Research",     text: "Nemeroff case report",                                                                       status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 15, category: "Research",     text: "APA article — Covidence",                                                                    status: "todo", link: "https://app.covidence.org/",               priority: null, dueDate: "" },
+      { id: 16, category: "Research",     text: "PTSD SMS-based digital review — move ahead alone or find collaborator",                      status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 17, category: "Research",     text: "Look into other LLMs for therapy applications",                                              status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 18, category: "Research",     text: "Find equipoise statements in MI transcripts to exemplify neutral talk",                      status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 19, category: "Research",     text: "Marko materials",                                                                            status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 20, category: "Research",     text: "Mateus paper",                                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      // Paper Ideas
+      { id: 21, category: "Paper Ideas",  text: "Embeddings paper",                                                                           status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 22, category: "Paper Ideas",  text: "Different LLMs for antidepressant guidelines",                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      // Reading
+      { id: 24, category: "Reading",      text: "Reminiscence and Recall — Faith Gibson",                                                     status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 25, category: "Reading",      text: "Cognitive Behavior Therapy — Judith Beck",                                                   status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 26, category: "Reading",      text: "Psychodynamic Psychotherapy — Deborah Cabaniss",                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 27, category: "Reading",      text: "Stages of Change (Prochaska)",                                                               status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 28, category: "Reading",      text: "Self-Compassion — Kristin Neff",                                                             status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 29, category: "Reading",      text: "Carl Rogers — Theory of 3 Core Conditions for Therapy",                                     status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 30, category: "Reading",      text: "Psychotherapy Relationships That Work",                                                      status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 31, category: "Reading",      text: "On Becoming a Person — Carl Rogers",                                                         status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 32, category: "Reading",      text: "Effective Psychotherapists",                                                                 status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 33, category: "Reading",      text: "Supportive psychotherapy guidelines",                                                        status: "todo", link: null,                                        priority: null, dueDate: "" },
+      // Videos
+      { id: 23, category: "Videos",       text: "Use YouTube transcripts to generate trauma narratives / train standardized trauma patients", status: "todo", link: null,                                        priority: null, dueDate: "" },
+      { id: 34, category: "Videos",       text: "YouTube: Experiential avoidance — prioritize coaching towards distress",                     status: "todo", link: "https://www.youtube.com/watch?v=p_f9PtWdT0w", priority: null, dueDate: "" },
+      { id: 35, category: "Videos",       text: "YouTube: Trauma patient training video 1",                                                   status: "todo", link: "https://www.youtube.com/watch?v=GxSR1VgVAUk", priority: null, dueDate: "" },
+      { id: 36, category: "Videos",       text: "YouTube: Trauma patient training video 2",                                                   status: "todo", link: "https://www.youtube.com/watch?v=kVec1zg6Pmo", priority: null, dueDate: "" },
+    ];
+
+    const categoryColors = {
+      IRB:           { bg: "bg-red-100",    text: "text-red-700",    border: "border-red-200"    },
+      Contacts:      { bg: "bg-blue-100",   text: "text-blue-700",   border: "border-blue-200"   },
+      Research:      { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
+      "Paper Ideas": { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200" },
+      Reading:       { bg: "bg-green-100",  text: "text-green-700",  border: "border-green-200"  },
+      Videos:        { bg: "bg-pink-100",   text: "text-pink-700",   border: "border-pink-200"   },
+    };
+
+    const statusStyles = {
+      todo:       { label: "To Do",       badge: "bg-gray-100 text-gray-600"   },
+      inprogress: { label: "In Progress", badge: "bg-blue-100 text-blue-700"   },
+      done:       { label: "Done",        badge: "bg-green-100 text-green-700" },
+    };
+
+    const priorityConfig = {
+      high:   { label: "High",   color: "text-red-600",   bg: "bg-red-50",   border: "border-red-300",   dot: "🔴" },
+      medium: { label: "Medium", color: "text-yellow-600",bg: "bg-yellow-50",border: "border-yellow-300",dot: "🟡" },
+      low:    { label: "Low",    color: "text-gray-400",  bg: "bg-gray-50",  border: "border-gray-200",  dot: "⚪" },
+    };
+
+    function formatDate(val) {
+      if (!val) return null;
+      const [y, m, d] = val.split("-");
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return `${months[parseInt(m,10)-1]} ${parseInt(d,10)}, ${y}`;
+    }
+
+    function isOverdue(dueDate) {
+      if (!dueDate) return false;
+      return new Date(dueDate) < new Date(new Date().toDateString());
+    }
+
+    const STORAGE_KEY = "research-dashboard-v1";
+
+    function loadSavedData() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        if (!saved.overrides) return initialTasks;
+        return initialTasks
+          .filter(task => !saved.overrides[task.id]?.deleted)
+          .map(task => ({ ...task, ...(saved.overrides[task.id] || {}) }));
+      } catch { return initialTasks; }
+    }
+
+    function saveOverrides(items) {
+      const overrides = {};
+      items.forEach(item => {
+        const base = initialTasks.find(t => t.id === item.id);
+        if (!base) return;
+        const diff = {};
+        if (item.status   !== base.status)   diff.status   = item.status;
+        if (item.priority !== base.priority) diff.priority = item.priority;
+        if (item.dueDate  !== base.dueDate)  diff.dueDate  = item.dueDate;
+        if (item.text     !== base.text)     diff.text     = item.text;
+        if (Object.keys(diff).length) overrides[item.id] = diff;
+      });
+      // Mark items removed from initialTasks as deleted
+      initialTasks.forEach(task => {
+        if (!items.find(i => i.id === task.id)) {
+          overrides[task.id] = { deleted: true };
+        }
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ overrides }));
+    }
+
+    function Dashboard() {
+      const [items, setItems] = useState(() => loadSavedData());
+
+      // Sync state
+      const [syncUrl, setSyncUrl]         = useState(() => getSyncUrl());
+      const [syncStatus, setSyncStatus]   = useState("idle"); // idle | syncing | synced | error
+      const [showSettings, setShowSettings] = useState(false);
+      const [syncUrlInput, setSyncUrlInput] = useState(() => getSyncUrl());
+      const debouncedPush = useRef(null);
+
+      // On mount: pull latest from cloud if URL is set
+      useEffect(() => {
+        if (!syncUrl) return;
+        setSyncStatus("syncing");
+        fetchFromCloud(syncUrl)
+          .then(data => {
+            if (data && data.overrides) {
+              const merged = initialTasks
+                .filter(task => !data.overrides[task.id]?.deleted)
+                .map(task => ({ ...task, ...(data.overrides[task.id] || {}) }));
+              setItems(merged);
+              saveOverrides(merged); // also update localStorage
+            }
+            setSyncStatus("synced");
+          })
+          .catch(() => setSyncStatus("error"));
+      }, [syncUrl]);
+
+      // Set up debounced push whenever syncUrl changes
+      useEffect(() => {
+        debouncedPush.current = debounce((overrides, url) => {
+          if (!url) return;
+          setSyncStatus("syncing");
+          pushToCloud(url, overrides)
+            .then(() => setSyncStatus("synced"))
+            .catch(() => setSyncStatus("synced")); // no-cors always resolves, treat as success
+        }, 1500);
+      }, [syncUrl]);
+
+      // Reminder timer — fires every reminderFreq minutes
+      useEffect(() => {
+        if (!reminderFreq) return;
+        const id = setInterval(() => setShowReminderPopup(true), reminderFreq * 60 * 1000);
+        return () => clearInterval(id);
+      }, [reminderFreq]);
+
+      const updateItems = (updater) => {
+        setItems(prev => {
+          const next = typeof updater === "function" ? updater(prev) : updater;
+          const overrides = {};
+          next.forEach(item => {
+            const base = initialTasks.find(t => t.id === item.id);
+            if (!base) return;
+            const diff = {};
+            if (item.status   !== base.status)   diff.status   = item.status;
+            if (item.priority !== base.priority) diff.priority = item.priority;
+            if (item.dueDate  !== base.dueDate)  diff.dueDate  = item.dueDate;
+            if (item.text     !== base.text)     diff.text     = item.text;
+            if (Object.keys(diff).length) overrides[item.id] = diff;
+          });
+          // Mark deleted items so the cloud also knows to exclude them
+          initialTasks.forEach(task => {
+            if (!next.find(i => i.id === task.id)) {
+              overrides[task.id] = { deleted: true };
+            }
+          });
+          saveOverrides(next); // always save locally
+          if (syncUrl && debouncedPush.current) debouncedPush.current(overrides, syncUrl);
+          return next;
+        });
+      };
+
+      const saveSyncUrl = () => {
+        const url = syncUrlInput.trim();
+        localStorage.setItem(SYNC_URL_KEY, url);
+        setSyncUrl(url);
+        setShowSettings(false);
+      };
+
+      const [activeCategory, setActiveCategory] = useState("All");
+      const [activeStatus, setActiveStatus]     = useState("All");
+      const [activePriority, setActivePriority] = useState("All");
+      const [search, setSearch]                 = useState("");
+      const [sortBy, setSortBy]                 = useState(() => localStorage.getItem("research-dashboard-sort") || "default");
+      const [reminderFreq, setReminderFreq]     = useState(() => parseInt(localStorage.getItem("research-dashboard-reminder-freq") || "0"));
+      const [showReminderPopup, setShowReminderPopup] = useState(false);
+      const [editingDate, setEditingDate]       = useState(null);
+      const [editingText, setEditingText]       = useState(null);
+      const [hoveredId, setHoveredId]           = useState(null);
+
+      const deleteItem = (id) => {
+        updateItems(prev => prev.filter(item => item.id !== id));
+      };
+      const [editingTextVal, setEditingTextVal] = useState("");
+
+      const categories = ["All", ...Object.keys(categoryColors)];
+
+      const cycleStatus = (id) => {
+        const order = ["todo", "inprogress", "done"];
+        updateItems(prev => prev.map(item => {
+          if (item.id !== id) return item;
+          return { ...item, status: order[(order.indexOf(item.status) + 1) % order.length] };
+        }));
+      };
+
+      const cyclePriority = (id) => {
+        const order = [null, "high", "medium", "low"];
+        updateItems(prev => prev.map(item => {
+          if (item.id !== id) return item;
+          return { ...item, priority: order[(order.indexOf(item.priority) + 1) % order.length] };
+        }));
+      };
+
+      const setDueDate = (id, val) => {
+        updateItems(prev => prev.map(item => item.id === id ? { ...item, dueDate: val } : item));
+      };
+
+      const priorityRank = { high: 0, medium: 1, low: 2 };
+
+      const filtered = items
+        .filter(item => {
+          const matchCat  = activeCategory === "All" || item.category === activeCategory;
+          const matchStat = activeStatus   === "All" || item.status   === activeStatus;
+          const matchPri  = activePriority === "All" || item.priority === activePriority;
+          const matchSrch = item.text.toLowerCase().includes(search.toLowerCase());
+          return matchCat && matchStat && matchPri && matchSrch;
+        })
+        .sort((a, b) => {
+          if (sortBy === "priority") return (priorityRank[a.priority] ?? 3) - (priorityRank[b.priority] ?? 3);
+          if (sortBy === "dueDate") {
+            if (!a.dueDate && !b.dueDate) return 0;
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return a.dueDate.localeCompare(b.dueDate);
+          }
+          return 0;
+        });
+
+      const total  = items.length;
+      const done   = items.filter(i => i.status === "done").length;
+      const inprog = items.filter(i => i.status === "inprogress").length;
+      const pct    = Math.round((done / total) * 100);
+
+      const grouped = Object.keys(categoryColors).reduce((acc, cat) => {
+        acc[cat] = items.filter(i => i.category === cat);
+        return acc;
+      }, {});
+
+      const highCount    = items.filter(i => i.priority === "high" && i.status !== "done").length;
+      const overdueCount = items.filter(i => isOverdue(i.dueDate) && i.status !== "done").length;
+
+      // Tasks shown in reminder: high priority (not done) + overdue (not done) + in-progress
+      const reminderTasks = items.filter(i =>
+        i.status !== "done" && (
+          i.priority === "high" ||
+          isOverdue(i.dueDate) ||
+          i.status === "inprogress"
+        )
+      );
+
+      return (
+        <div className="min-h-screen bg-gray-50">
+
+          {/* Reminder popup */}
+          {showReminderPopup && (
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+              <div style={{background:"white",borderRadius:"16px",padding:"28px",maxWidth:"480px",width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}}>
+                  <h2 style={{fontWeight:"700",fontSize:"17px",color:"#111827",margin:0}}>⏰ Task Reminder</h2>
+                  <button onClick={() => setShowReminderPopup(false)}
+                    style={{background:"none",border:"none",fontSize:"20px",cursor:"pointer",color:"#6b7280",lineHeight:1,padding:"2px 6px"}}>✕</button>
+                </div>
+                {reminderTasks.length === 0 ? (
+                  <p style={{color:"#6b7280",fontSize:"14px",margin:0}}>No urgent tasks right now — you're all caught up! 🎉</p>
+                ) : (
+                  <>
+                    <p style={{color:"#6b7280",fontSize:"13px",marginBottom:"14px"}}>
+                      You have <strong>{reminderTasks.length}</strong> task{reminderTasks.length !== 1 ? "s" : ""} needing attention:
+                    </p>
+                    <div style={{display:"flex",flexDirection:"column",gap:"8px",maxHeight:"300px",overflowY:"auto"}}>
+                      {reminderTasks.map(item => {
+                        const overdue = isOverdue(item.dueDate);
+                        const c = categoryColors[item.category] || {bg:"bg-gray-100",text:"text-gray-700",border:"border-gray-200"};
+                        return (
+                          <div key={item.id} style={{display:"flex",alignItems:"flex-start",gap:"10px",padding:"10px 12px",borderRadius:"10px",border:"1px solid #e5e7eb",background:"#fafafa"}}>
+                            <div style={{flexShrink:0,marginTop:"2px"}}>
+                              {item.priority === "high" ? "🔴" : overdue ? "⚠️" : "🔵"}
+                            </div>
+                            <div style={{flex:1,minWidth:0}}>
+                              <p style={{margin:0,fontSize:"13px",fontWeight:"500",color:"#111827",lineHeight:"1.4"}}>{item.text}</p>
+                              <div style={{display:"flex",gap:"6px",marginTop:"5px",flexWrap:"wrap"}}>
+                                <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#f3f4f6",color:"#6b7280"}}>{item.category}</span>
+                                {item.priority === "high" && <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#fee2e2",color:"#dc2626"}}>High priority</span>}
+                                {overdue && <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#fff7ed",color:"#ea580c"}}>Overdue</span>}
+                                {item.status === "inprogress" && <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:"99px",background:"#eff6ff",color:"#2563eb"}}>In progress</span>}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+                <button onClick={() => setShowReminderPopup(false)}
+                  style={{marginTop:"18px",width:"100%",background:"#7c3aed",color:"white",border:"none",borderRadius:"8px",padding:"9px",fontSize:"14px",fontWeight:"600",cursor:"pointer"}}>
+                  Got it
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-5 sticky top-0 z-10 shadow-sm">
+            <div style={{maxWidth:"1100px",margin:"0 auto"}} className="flex flex-col gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Research Task Dashboard</h1>
+                  <p className="text-sm text-gray-500 mt-1">Psychotherapy · AI · IRB · Resources</p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {highCount > 0 && (
+                    <span className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded-full font-medium">
+                      🔴 {highCount} high priority
+                    </span>
+                  )}
+                  {overdueCount > 0 && (
+                    <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2 py-1 rounded-full font-medium">
+                      ⚠️ {overdueCount} overdue
+                    </span>
+                  )}
+                  {/* Sync status */}
+                  {syncUrl && (
+                    <span style={{fontSize:"12px", padding:"3px 8px", borderRadius:"9999px", border:"1px solid",
+                      background: syncStatus==="synced" ? "#f0fdf4" : syncStatus==="syncing" ? "#eff6ff" : syncStatus==="error" ? "#fef2f2" : "#f9fafb",
+                      borderColor: syncStatus==="synced" ? "#86efac" : syncStatus==="syncing" ? "#93c5fd" : syncStatus==="error" ? "#fca5a5" : "#e5e7eb",
+                      color: syncStatus==="synced" ? "#16a34a" : syncStatus==="syncing" ? "#2563eb" : syncStatus==="error" ? "#dc2626" : "#6b7280",
+                    }}>
+                      {syncStatus==="synced" ? "☁️ Synced" : syncStatus==="syncing" ? "⏳ Syncing…" : syncStatus==="error" ? "⚠️ Sync error" : "☁️ —"}
+                    </span>
+                  )}
+
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-48"
+                    style={{outline:"none"}}
+                  />
+
+                  {/* Settings button */}
+                  <button onClick={() => setShowSettings(s => !s)}
+                    title="Sync settings"
+                    style={{fontSize:"18px", background:"none", border:"none", cursor:"pointer", padding:"2px 4px", borderRadius:"6px", lineHeight:1}}
+                  >⚙️</button>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-gray-100 rounded-full" style={{height:"8px"}}>
+                  <div className="bg-green-500 rounded-full" style={{height:"8px", width:`${pct}%`, transition:"width 0.5s"}} />
+                </div>
+                <span className="text-sm text-gray-600 whitespace-nowrap">
+                  {done}/{total} done · {inprog} in progress · {pct}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{maxWidth:"1100px",margin:"0 auto",padding:"24px"}}>
+
+            {/* Settings panel */}
+            {showSettings && (
+              <div style={{background:"white", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", marginBottom:"20px", boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
+                <h2 style={{fontWeight:"600", fontSize:"15px", marginBottom:"16px", color:"#111827"}}>⚙️ Settings</h2>
+
+                {/* Sync URL */}
+                <p style={{fontSize:"13px", fontWeight:"500", color:"#374151", marginBottom:"6px"}}>Cloud Sync URL</p>
+                <p style={{fontSize:"13px", color:"#6b7280", marginBottom:"10px", lineHeight:"1.5"}}>
+                  Paste your Google Apps Script web app URL to sync task state across devices.
+                </p>
+                <div style={{display:"flex", gap:"8px", alignItems:"center", marginBottom:"20px"}}>
+                  <input
+                    type="text"
+                    value={syncUrlInput}
+                    onChange={e => setSyncUrlInput(e.target.value)}
+                    placeholder="https://script.google.com/macros/s/..."
+                    style={{flex:1, fontSize:"13px", border:"1px solid #d1d5db", borderRadius:"8px", padding:"6px 10px", outline:"none", fontFamily:"monospace"}}
+                  />
+                  <button onClick={saveSyncUrl}
+                    style={{background:"#7c3aed", color:"white", border:"none", borderRadius:"8px", padding:"6px 14px", fontSize:"13px", cursor:"pointer", fontWeight:"500"}}
+                  >Save</button>
+                  {syncUrl && (
+                    <button onClick={() => { setSyncUrlInput(""); localStorage.removeItem(SYNC_URL_KEY); setSyncUrl(""); setShowSettings(false); }}
+                      style={{background:"#fee2e2", color:"#dc2626", border:"none", borderRadius:"8px", padding:"6px 10px", fontSize:"13px", cursor:"pointer"}}
+                    >Remove</button>
+                  )}
+                </div>
+
+                {/* Reminder frequency */}
+                <div style={{borderTop:"1px solid #f3f4f6", paddingTop:"16px"}}>
+                  <p style={{fontSize:"13px", fontWeight:"500", color:"#374151", marginBottom:"6px"}}>⏰ Task Reminder</p>
+                  <p style={{fontSize:"13px", color:"#6b7280", marginBottom:"10px"}}>
+                    Show a popup summarising high-priority, overdue, and in-progress tasks at a set interval.
+                  </p>
+                  <div style={{display:"flex", alignItems:"center", gap:"10px"}}>
+                    <select
+                      value={reminderFreq}
+                      onChange={e => {
+                        const val = parseInt(e.target.value);
+                        setReminderFreq(val);
+                        localStorage.setItem("research-dashboard-reminder-freq", val);
+                      }}
+                      style={{fontSize:"13px", border:"1px solid #d1d5db", borderRadius:"8px", padding:"6px 10px", outline:"none", background:"white", cursor:"pointer"}}
+                    >
+                      <option value="0">Off</option>
+                      <option value="15">Every 15 minutes</option>
+                      <option value="30">Every 30 minutes</option>
+                      <option value="60">Every hour</option>
+                      <option value="120">Every 2 hours</option>
+                      <option value="240">Every 4 hours</option>
+                      <option value="480">Every 8 hours</option>
+                    </select>
+                    {reminderFreq > 0 && (
+                      <button onClick={() => setShowReminderPopup(true)}
+                        style={{fontSize:"13px", background:"#f3f4f6", border:"1px solid #e5e7eb", borderRadius:"8px", padding:"6px 12px", cursor:"pointer", color:"#374151"}}
+                      >Preview reminder</button>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* Category cards */}
+            <div className="grid gap-3 mb-6" style={{gridTemplateColumns:"repeat(auto-fill, minmax(140px, 1fr))"}}>
+              {Object.keys(categoryColors).map(cat => {
+                const c = categoryColors[cat];
+                const count = grouped[cat].length;
+                const doneCount = grouped[cat].filter(i => i.status === "done").length;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(activeCategory === cat ? "All" : cat)}
+                    className={`rounded-xl p-3 text-left border transition-all ${c.bg} ${c.border}`}
+                    style={activeCategory === cat ? {outline:"2px solid #a855f7", outlineOffset:"2px"} : {}}
+                  >
+                    <div className={`text-xs font-semibold ${c.text} mb-1`}>{cat}</div>
+                    <div className={`text-2xl font-bold ${c.text}`}>{count}</div>
+                    <div className="text-xs text-gray-500 mt-1">{doneCount} done</div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 mb-5 items-center">
+              <div className="flex gap-1 flex-wrap">
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${
+                      activeCategory === cat ? "bg-purple-600 text-white border-purple-600" : "bg-white text-gray-600 border-gray-200"
+                    }`}
+                  >{cat}</button>
+                ))}
+              </div>
+              <div style={{width:"1px",height:"20px",background:"#e5e7eb"}} />
+              <div className="flex gap-1 flex-wrap">
+                {["All","high","medium","low"].map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setActivePriority(p)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${
+                      activePriority === p ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200"
+                    }`}
+                  >{p === "All" ? "All Priorities" : `${priorityConfig[p].dot} ${priorityConfig[p].label}`}</button>
+                ))}
+              </div>
+              <div style={{width:"1px",height:"20px",background:"#e5e7eb"}} />
+              <div className="flex gap-1 flex-wrap">
+                {["All","todo","inprogress","done"].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setActiveStatus(s)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${
+                      activeStatus === s ? "bg-gray-600 text-white border-gray-600" : "bg-white text-gray-600 border-gray-200"
+                    }`}
+                  >{s === "All" ? "All Statuses" : statusStyles[s].label}</button>
+                ))}
+              </div>
+              <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:"8px"}}>
+                <span className="text-xs text-gray-500">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={e => { setSortBy(e.target.value); localStorage.setItem("research-dashboard-sort", e.target.value); }}
+                  className="text-sm border border-gray-200 rounded-lg px-2 py-1 bg-white"
+                >
+                  <option value="default">Default</option>
+                  <option value="priority">Priority</option>
+                  <option value="dueDate">Due Date</option>
+                </select>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              Showing {filtered.length} item{filtered.length !== 1 ? "s" : ""}
+              {search && ` matching "${search}"`}
+            </p>
+
+            {/* Task list */}
+            <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
+              {filtered.length === 0 && (
+                <div className="text-center py-16 text-gray-400 bg-white rounded-xl border border-gray-100">
+                  No tasks match your filters.
+                </div>
+              )}
+              {filtered.map(item => {
+                const c = categoryColors[item.category];
+                const s = statusStyles[item.status];
+                const p = item.priority ? priorityConfig[item.priority] : null;
+                const overdue = isOverdue(item.dueDate) && item.status !== "done";
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-3 bg-white border rounded-xl px-4 py-3 ${item.status === "done" ? "opacity-50" : ""}`}
+                    onMouseEnter={() => setHoveredId(item.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    style={{
+                      borderColor: overdue ? "#fdba74" : "#f3f4f6",
+                      background: overdue ? "#fff7ed" : "white",
+                      transition: "box-shadow 0.15s",
+                    }}
+                  >
+                    {/* Status circle */}
+                    <button
+                      onClick={() => cycleStatus(item.id)}
+                      title="Click to advance status"
+                      style={{
+                        width:"20px", height:"20px", borderRadius:"50%", border:"2px solid",
+                        flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center",
+                        cursor:"pointer", transition:"all 0.15s",
+                        borderColor: item.status === "done" ? "#22c55e" : item.status === "inprogress" ? "#60a5fa" : "#d1d5db",
+                        background: item.status === "done" ? "#22c55e" : item.status === "inprogress" ? "#60a5fa" : "white",
+                      }}
+                    >
+                      {item.status === "done" && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      {item.status === "inprogress" && <div style={{width:"8px",height:"8px",borderRadius:"50%",background:"white"}} />}
+                    </button>
+
+                    {/* Task text */}
+                    <div style={{flex:1, minWidth:0}}>
+                      {editingText === item.id ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editingTextVal}
+                          onChange={e => setEditingTextVal(e.target.value)}
+                          onBlur={() => {
+                            const trimmed = editingTextVal.trim();
+                            if (trimmed) updateItems(prev => prev.map(t => t.id === item.id ? { ...t, text: trimmed } : t));
+                            setEditingText(null);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") e.target.blur();
+                            if (e.key === "Escape") setEditingText(null);
+                          }}
+                          style={{width:"100%",fontSize:"14px",border:"1px solid #a855f7",borderRadius:"6px",padding:"2px 8px",outline:"none"}}
+                        />
+                      ) : (
+                        <span
+                          onClick={() => { setEditingText(item.id); setEditingTextVal(item.text); }}
+                          title="Click to rename"
+                          style={{
+                            fontSize:"14px", cursor:"text",
+                            textDecoration: item.status === "done" ? "line-through" : "none",
+                            color: item.status === "done" ? "#9ca3af" : "#1f2937",
+                            padding:"1px 4px", borderRadius:"4px",
+                          }}
+                          onMouseEnter={e => e.target.style.background="#f3e8ff"}
+                          onMouseLeave={e => e.target.style.background="transparent"}
+                        >
+                          {item.text}
+                        </span>
+                      )}
+                      {item.link && editingText !== item.id && (
+                        <a href={item.link} target="_blank" rel="noreferrer"
+                           style={{marginLeft:"8px",fontSize:"12px",color:"#3b82f6",textDecoration:"none"}}
+                           onMouseEnter={e=>e.target.style.textDecoration="underline"}
+                           onMouseLeave={e=>e.target.style.textDecoration="none"}
+                        >↗ link</a>
+                      )}
+                    </div>
+
+                    {/* Due date */}
+                    <div style={{flexShrink:0}}>
+                      {editingDate === item.id ? (
+                        <input
+                          type="date"
+                          autoFocus
+                          value={item.dueDate}
+                          onChange={e => setDueDate(item.id, e.target.value)}
+                          onBlur={() => setEditingDate(null)}
+                          style={{fontSize:"12px",border:"1px solid #a855f7",borderRadius:"6px",padding:"2px 6px",outline:"none"}}
+                        />
+                      ) : (
+                        <button
+                          onClick={() => setEditingDate(item.id)}
+                          style={{
+                            fontSize:"12px", padding:"2px 8px", borderRadius:"6px", cursor:"pointer",
+                            border: overdue ? "1px solid #fb923c" : item.dueDate ? "1px solid #d1d5db" : "1px dashed #d1d5db",
+                            background: overdue ? "#ffedd5" : item.dueDate ? "#f3f4f6" : "transparent",
+                            color: overdue ? "#c2410c" : item.dueDate ? "#4b5563" : "#d1d5db",
+                            fontWeight: overdue ? "600" : "normal",
+                          }}
+                        >
+                          {item.dueDate ? (overdue ? `⚠️ ${formatDate(item.dueDate)}` : `📅 ${formatDate(item.dueDate)}`) : "+ due date"}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Priority */}
+                    <button
+                      onClick={() => cyclePriority(item.id)}
+                      title="Click to set priority"
+                      style={{
+                        flexShrink:0, fontSize:"12px", padding:"2px 8px", borderRadius:"6px",
+                        cursor:"pointer", fontWeight:"500",
+                        border: p ? `1px solid` : "1px dashed #d1d5db",
+                        borderColor: p ? (p.border.replace("border-","") === "border-red-300" ? "#fca5a5" : p.border.includes("yellow") ? "#fcd34d" : "#d1d5db") : "#d1d5db",
+                        background: p ? (p.bg.includes("red") ? "#fef2f2" : p.bg.includes("yellow") ? "#fffbeb" : "#f9fafb") : "transparent",
+                        color: p ? (p.color.includes("red") ? "#dc2626" : p.color.includes("yellow") ? "#d97706" : "#9ca3af") : "#d1d5db",
+                      }}
+                    >
+                      {p ? `${p.dot} ${p.label}` : "+ priority"}
+                    </button>
+
+                    {/* Status badge */}
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${s.badge}`} style={{flexShrink:0}}>
+                      {s.label}
+                    </span>
+
+                    {/* Category badge */}
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${c.bg} ${c.text}`} style={{flexShrink:0}}>
+                      {item.category}
+                    </span>
+
+                    {/* Delete button — visible on hover */}
+                    <button
+                      onClick={() => deleteItem(item.id)}
+                      title="Delete task"
+                      style={{
+                        flexShrink:0, background:"none", border:"none", cursor:"pointer",
+                        fontSize:"15px", padding:"2px 4px", borderRadius:"6px", lineHeight:1,
+                        opacity: hoveredId === item.id ? 1 : 0,
+                        transition: "opacity 0.15s",
+                        color: "#ef4444",
+                      }}
+                    >🗑️</button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-center text-xs text-gray-400 mt-8">
+              Click ○ to cycle status · Click task text to rename · Click "+ priority" to set priority · Click "+ due date" to pick a date
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<Dashboard />, document.getElementById("root"));
+  </script>
+</body>
+</html>
