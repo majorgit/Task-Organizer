@@ -267,6 +267,11 @@
       const [sortBy, setSortBy]                 = useState("default");
       const [editingDate, setEditingDate]       = useState(null);
       const [editingText, setEditingText]       = useState(null);
+      const [hoveredId, setHoveredId]           = useState(null);
+
+      const deleteItem = (id) => {
+        updateItems(prev => prev.filter(item => item.id !== id));
+      };
       const [editingTextVal, setEditingTextVal] = useState("");
 
       const categories = ["All", ...Object.keys(categoryColors)];
@@ -509,6 +514,8 @@
                   <div
                     key={item.id}
                     className={`flex items-center gap-3 bg-white border rounded-xl px-4 py-3 ${item.status === "done" ? "opacity-50" : ""}`}
+                    onMouseEnter={() => setHoveredId(item.id)}
+                    onMouseLeave={() => setHoveredId(null)}
                     style={{
                       borderColor: overdue ? "#fdba74" : "#f3f4f6",
                       background: overdue ? "#fff7ed" : "white",
@@ -631,6 +638,19 @@
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${c.bg} ${c.text}`} style={{flexShrink:0}}>
                       {item.category}
                     </span>
+
+                    {/* Delete button — visible on hover */}
+                    <button
+                      onClick={() => deleteItem(item.id)}
+                      title="Delete task"
+                      style={{
+                        flexShrink:0, background:"none", border:"none", cursor:"pointer",
+                        fontSize:"15px", padding:"2px 4px", borderRadius:"6px", lineHeight:1,
+                        opacity: hoveredId === item.id ? 1 : 0,
+                        transition: "opacity 0.15s",
+                        color: "#ef4444",
+                      }}
+                    >🗑️</button>
                   </div>
                 );
               })}
