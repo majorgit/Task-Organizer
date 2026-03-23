@@ -67,8 +67,10 @@
     // ── Cloud sync helpers ──────────────────────────────────────
     const SYNC_URL_KEY = "research-dashboard-sync-url";
 
+    const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbw5GMis4JeZNBnfWmiOaKAfIBb-ljUt7kT4A9abRJSUKtamumBFhBbW5XfAOlCDk7Faww/exec";
+
     function getSyncUrl() {
-      return localStorage.getItem(SYNC_URL_KEY) || "";
+      return localStorage.getItem(SYNC_URL_KEY) || DEFAULT_SYNC_URL;
     }
 
     async function fetchFromCloud(url) {
