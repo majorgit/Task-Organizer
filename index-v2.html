@@ -242,6 +242,8 @@
         task.categories = task.category ? [task.category] : [];
         delete task.category;
       }
+      // Backward compat: old data had no workspace field — default to Research
+      if (!task.workspace) task.workspace = "Research";
       return task;
     }
 
@@ -280,6 +282,20 @@
       });
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ overrides, customTasks }));
     }
+
+    const WORKSPACES = [
+      { id: "Research", label: "Research", icon: "🔬", color: "#7c3aed", light: "#f5f3ff", border: "#ddd6fe" },
+      { id: "Clinical", label: "Clinical", icon: "🩺", color: "#0891b2", light: "#ecfeff", border: "#a5f3fc" },
+      { id: "Chief",    label: "Chief",    icon: "⭐", color: "#d97706", light: "#fffbeb", border: "#fde68a" },
+      { id: "Personal", label: "Personal", icon: "🌱", color: "#16a34a", light: "#f0fdf4", border: "#bbf7d0" },
+    ];
+
+    const workspaceMeta = {
+      Research: { title: "Research Dashboard", subtitle: "Psychotherapy · AI · IRB · Resources" },
+      Clinical: { title: "Clinical Dashboard", subtitle: "Patient care · Protocols · Notes" },
+      Chief:    { title: "Chief Duties",       subtitle: "Leadership · Admin · Meetings" },
+      Personal: { title: "Personal Tasks",     subtitle: "Goals · Errands · Life" },
+    };
 
     function Dashboard() {
       const [items, setItems] = useState(() => loadSavedData());
@@ -379,10 +395,33 @@
       const [sortBy, setSortBy]                 = useState(() => localStorage.getItem("research-dashboard-sort") || "default");
       const [reminderFreq, setReminderFreq]     = useState(() => parseInt(localStorage.getItem("research-dashboard-reminder-freq") || "0"));
       const [showReminderPopup, setShowReminderPopup] = useState(false);
-      const [customCategories, setCustomCategories] = useState(() => {
-        try { return JSON.parse(localStorage.getItem("research-dashboard-categories") || "[]"); }
-        catch { return []; }
+      const [activeWorkspace, setActiveWorkspace] = useState("Research");
+      const [animating, setAnimating] = useState(false);
+
+      const switchWorkspace = (ws) => {
+        if (ws === activeWorkspace || animating) return;
+        setAnimating(true);
+        setTimeout(() => {
+          setActiveWorkspace(ws);
+          setActiveCategory("All");
+          setActiveStatus("All");
+          setActivePriority("All");
+          setSearch("");
+          setShowSettings(false);
+          setEditingCategory(null);
+          setTimeout(() => setAnimating(false), 30);
+        }, 180);
+      };
+
+      const [customCategoriesAll, setCustomCategoriesAll] = useState(() => {
+        try {
+          const v2 = JSON.parse(localStorage.getItem("research-dashboard-categories-v2") || "null");
+          if (v2) return v2;
+          const old = JSON.parse(localStorage.getItem("research-dashboard-categories") || "[]");
+          return { Research: old, Clinical: [], Chief: [], Personal: [] };
+        } catch { return { Research: [], Clinical: [], Chief: [], Personal: [] }; }
       });
+      const customCategories = customCategoriesAll[activeWorkspace] || [];
       const [showAddTask, setShowAddTask]       = useState(false);
       const [newTaskText, setNewTaskText]       = useState("");
       const [newTaskCategories, setNewTaskCategories] = useState([]);
@@ -397,18 +436,25 @@
       const [hoveredId, setHoveredId]           = useState(null);
       const [hoveredLabel, setHoveredLabel]     = useState(null);
       const [hoveredChip, setHoveredChip]       = useState(null); // "taskId:catName"
-      const [deletedDefaults, setDeletedDefaults] = useState(() => {
-        try { return JSON.parse(localStorage.getItem("research-dashboard-deleted-defaults") || "[]"); }
-        catch { return []; }
+      const [deletedDefaultsAll, setDeletedDefaultsAll] = useState(() => {
+        try {
+          const v2 = JSON.parse(localStorage.getItem("research-dashboard-deleted-defaults-v2") || "null");
+          if (v2) return v2;
+          const old = JSON.parse(localStorage.getItem("research-dashboard-deleted-defaults") || "[]");
+          return { Research: old, Clinical: [], Chief: [], Personal: [] };
+        } catch { return { Research: [], Clinical: [], Chief: [], Personal: [] }; }
       });
+      const deletedDefaults = deletedDefaultsAll[activeWorkspace] || [];
 
+      const workspaceDefaults = activeWorkspace === "Research" ? categoryColors : {};
       const activeDefaultColors = Object.fromEntries(
-        Object.entries(categoryColors).filter(([name]) => !deletedDefaults.includes(name))
+        Object.entries(workspaceDefaults).filter(([name]) => !deletedDefaults.includes(name))
       );
       const allCategoryColors = {
         ...activeDefaultColors,
         ...Object.fromEntries(customCategories.map(c => [c.name, { ...c, isCustom: true }])),
       };
+      const accentColor = WORKSPACES.find(w => w.id === activeWorkspace)?.color || "#7c3aed";
 
       const deleteItem = (id) => {
         updateItems(prev => prev.filter(item => item.id !== id));
@@ -426,6 +472,7 @@
         if (!newTaskText.trim()) return;
         updateItems(prev => [...prev, {
           id: nextCustomId(),
+          workspace: activeWorkspace,
           categories: newTaskCategories,
           text: newTaskText.trim(),
           status: "todo",
@@ -440,28 +487,28 @@
       const addCustomCategory = () => {
         const name = newLabelName.trim();
         if (!name || allCategoryColors[name]) return;
-        const updated = [...customCategories, { name, ...newLabelColor, isCustom: true }];
-        setCustomCategories(updated);
-        localStorage.setItem("research-dashboard-categories", JSON.stringify(updated));
+        const updated = { ...customCategoriesAll, [activeWorkspace]: [...customCategories, { name, ...newLabelColor, isCustom: true }] };
+        setCustomCategoriesAll(updated);
+        localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updated));
         setNewLabelName(""); setShowAddLabel(false);
       };
 
       const deleteCustomCategory = (name) => {
-        const updated = customCategories.filter(c => c.name !== name);
-        setCustomCategories(updated);
-        localStorage.setItem("research-dashboard-categories", JSON.stringify(updated));
+        const updated = { ...customCategoriesAll, [activeWorkspace]: customCategories.filter(c => c.name !== name) };
+        setCustomCategoriesAll(updated);
+        localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updated));
       };
 
       const deleteDefaultCategory = (name) => {
-        const updated = [...deletedDefaults, name];
-        setDeletedDefaults(updated);
-        localStorage.setItem("research-dashboard-deleted-defaults", JSON.stringify(updated));
+        const updated = { ...deletedDefaultsAll, [activeWorkspace]: [...deletedDefaults, name] };
+        setDeletedDefaultsAll(updated);
+        localStorage.setItem("research-dashboard-deleted-defaults-v2", JSON.stringify(updated));
       };
 
       const restoreDefaultCategory = (name) => {
-        const updated = deletedDefaults.filter(n => n !== name);
-        setDeletedDefaults(updated);
-        localStorage.setItem("research-dashboard-deleted-defaults", JSON.stringify(updated));
+        const updated = { ...deletedDefaultsAll, [activeWorkspace]: deletedDefaults.filter(n => n !== name) };
+        setDeletedDefaultsAll(updated);
+        localStorage.setItem("research-dashboard-deleted-defaults-v2", JSON.stringify(updated));
       };
 
       const cycleStatus = (id) => {
@@ -486,7 +533,9 @@
 
       const priorityRank = { high: 0, medium: 1, low: 2 };
 
-      const filtered = items
+      const workspaceItems = items.filter(i => (i.workspace || "Research") === activeWorkspace);
+
+      const filtered = workspaceItems
         .filter(item => {
           const matchCat  = activeCategory === "All" || (item.categories || []).includes(activeCategory);
           const matchStat = activeStatus   === "All" || item.status   === activeStatus;
@@ -505,21 +554,21 @@
           return 0;
         });
 
-      const total  = items.length;
-      const done   = items.filter(i => i.status === "done").length;
-      const inprog = items.filter(i => i.status === "inprogress").length;
-      const pct    = Math.round((done / total) * 100);
+      const total  = workspaceItems.length;
+      const done   = workspaceItems.filter(i => i.status === "done").length;
+      const inprog = workspaceItems.filter(i => i.status === "inprogress").length;
+      const pct    = total > 0 ? Math.round((done / total) * 100) : 0;
 
       const grouped = Object.keys(allCategoryColors).reduce((acc, cat) => {
-        acc[cat] = items.filter(i => (i.categories || []).includes(cat));
+        acc[cat] = workspaceItems.filter(i => (i.categories || []).includes(cat));
         return acc;
       }, {});
 
-      const highCount    = items.filter(i => i.priority === "high" && i.status !== "done").length;
-      const overdueCount = items.filter(i => isOverdue(i.dueDate) && i.status !== "done").length;
+      const highCount    = workspaceItems.filter(i => i.priority === "high" && i.status !== "done").length;
+      const overdueCount = workspaceItems.filter(i => isOverdue(i.dueDate) && i.status !== "done").length;
 
       // Tasks shown in reminder: high priority (not done) + overdue (not done) + in-progress
-      const reminderTasks = items.filter(i =>
+      const reminderTasks = workspaceItems.filter(i =>
         i.status !== "done" && (
           i.priority === "high" ||
           isOverdue(i.dueDate) ||
@@ -572,7 +621,7 @@
                   </>
                 )}
                 <button onClick={() => setShowReminderPopup(false)}
-                  style={{marginTop:"18px",width:"100%",background:"#7c3aed",color:"white",border:"none",borderRadius:"8px",padding:"9px",fontSize:"14px",fontWeight:"600",cursor:"pointer"}}>
+                  style={{marginTop:"18px",width:"100%",background:accentColor,color:"white",border:"none",borderRadius:"8px",padding:"9px",fontSize:"14px",fontWeight:"600",cursor:"pointer"}}>
                   Got it
                 </button>
               </div>
@@ -626,7 +675,7 @@
                           className={selected ? "" : `${cc.bg} ${cc.text}`}
                           style={{
                             fontSize:"12px",padding:"3px 10px",borderRadius:"9999px",fontWeight:"500",cursor:"pointer",
-                            ...(selected ? {background:"#7c3aed",color:"white",border:"1.5px solid #7c3aed"} : {border:"1.5px solid transparent"}),
+                            ...(selected ? {background:accentColor,color:"white",border:`1.5px solid ${accentColor}`} : {border:"1.5px solid transparent"}),
                           }}>{cat}</button>
                       );
                     })}
@@ -667,7 +716,7 @@
 
                 <div style={{display:"flex",gap:"8px"}}>
                   <button onClick={addTask}
-                    style={{flex:1,background:"#7c3aed",color:"white",border:"none",borderRadius:"8px",padding:"9px",fontSize:"14px",fontWeight:"600",cursor:"pointer"}}>
+                    style={{flex:1,background:accentColor,color:"white",border:"none",borderRadius:"8px",padding:"9px",fontSize:"14px",fontWeight:"600",cursor:"pointer"}}>
                     Add Task
                   </button>
                   <button onClick={() => setShowAddTask(false)}
@@ -684,8 +733,8 @@
             <div style={{maxWidth:"1100px",margin:"0 auto"}} className="flex flex-col gap-3">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Research Task Dashboard</h1>
-                  <p className="text-sm text-gray-500 mt-1">Psychotherapy · AI · IRB · Resources</p>
+                  <h1 className="text-2xl font-bold text-gray-900">{workspaceMeta[activeWorkspace].title}</h1>
+                  <p className="text-sm text-gray-500 mt-1">{workspaceMeta[activeWorkspace].subtitle}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   {highCount > 0 && (
@@ -720,7 +769,7 @@
 
                   {/* Add Task button */}
                   <button onClick={() => setShowAddTask(true)}
-                    style={{fontSize:"13px", fontWeight:"600", background:"#7c3aed", color:"white", border:"none", borderRadius:"8px", padding:"6px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:"4px"}}
+                    style={{fontSize:"13px", fontWeight:"600", background:accentColor, color:"white", border:"none", borderRadius:"8px", padding:"6px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:"4px"}}
                   >+ Task</button>
 
                   {/* Settings button */}
@@ -732,8 +781,8 @@
               </div>
               {/* Progress bar */}
               <div className="flex items-center gap-3">
-                <div className="flex-1 bg-gray-100 rounded-full" style={{height:"8px"}}>
-                  <div className="bg-green-500 rounded-full" style={{height:"8px", width:`${pct}%`, transition:"width 0.5s"}} />
+                <div className="flex-1 bg-gray-100 rounded-full" style={{height:"6px"}}>
+                  <div className="rounded-full" style={{height:"6px", width:`${pct}%`, background:accentColor, transition:"width 0.5s, background 0.4s"}} />
                 </div>
                 <span className="text-sm text-gray-600 whitespace-nowrap">
                   {done}/{total} done · {inprog} in progress · {pct}%
@@ -742,7 +791,59 @@
             </div>
           </div>
 
-          <div style={{maxWidth:"1100px",margin:"0 auto",padding:"24px"}}>
+          {/* Workspace switcher */}
+          <div style={{background:"white", borderBottom:"1px solid #e5e7eb", position:"sticky", top:"97px", zIndex:9}}>
+            <div style={{maxWidth:"1100px", margin:"0 auto", position:"relative"}}>
+              <div style={{display:"flex"}}>
+                {WORKSPACES.map((ws, idx) => {
+                  const isActive = activeWorkspace === ws.id;
+                  const wsCount = items.filter(i => (i.workspace||"Research") === ws.id && i.status !== "done").length;
+                  return (
+                    <button
+                      key={ws.id}
+                      onClick={() => switchWorkspace(ws.id)}
+                      style={{
+                        flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:"7px",
+                        padding:"12px 8px", border:"none", background:"transparent", cursor:"pointer",
+                        transition:"background 0.2s",
+                        background: isActive ? ws.light : "transparent",
+                      }}
+                    >
+                      <span style={{fontSize:"16px", lineHeight:1}}>{ws.icon}</span>
+                      <span style={{fontSize:"13px", fontWeight: isActive ? "700" : "500", color: isActive ? ws.color : "#6b7280", transition:"color 0.2s"}}>
+                        {ws.label}
+                      </span>
+                      {wsCount > 0 && (
+                        <span style={{
+                          fontSize:"11px", fontWeight:"600", minWidth:"18px", height:"18px",
+                          borderRadius:"9999px", display:"inline-flex", alignItems:"center", justifyContent:"center",
+                          padding:"0 5px",
+                          background: isActive ? ws.color : "#e5e7eb",
+                          color: isActive ? "white" : "#6b7280",
+                          transition:"background 0.2s, color 0.2s",
+                        }}>{wsCount}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Sliding indicator */}
+              <div style={{
+                position:"absolute", bottom:0, height:"3px", borderRadius:"3px 3px 0 0",
+                width:"25%",
+                left:`${WORKSPACES.findIndex(w => w.id === activeWorkspace) * 25}%`,
+                background: WORKSPACES.find(w => w.id === activeWorkspace)?.color,
+                transition:"left 0.28s cubic-bezier(0.4,0,0.2,1), background 0.28s",
+              }} />
+            </div>
+          </div>
+
+          <div style={{
+            maxWidth:"1100px",margin:"0 auto",padding:"24px",
+            opacity: animating ? 0 : 1,
+            transform: animating ? "translateY(10px)" : "translateY(0)",
+            transition: animating ? "none" : "opacity 0.25s ease, transform 0.25s ease",
+          }}>
 
             {/* Settings panel */}
             {showSettings && (
@@ -763,7 +864,7 @@
                     style={{flex:1, fontSize:"13px", border:"1px solid #d1d5db", borderRadius:"8px", padding:"6px 10px", outline:"none", fontFamily:"monospace"}}
                   />
                   <button onClick={saveSyncUrl}
-                    style={{background:"#7c3aed", color:"white", border:"none", borderRadius:"8px", padding:"6px 14px", fontSize:"13px", cursor:"pointer", fontWeight:"500"}}
+                    style={{background:accentColor, color:"white", border:"none", borderRadius:"8px", padding:"6px 14px", fontSize:"13px", cursor:"pointer", fontWeight:"500"}}
                   >Save</button>
                   {syncUrl && (
                     <button onClick={() => { setSyncUrlInput(""); localStorage.removeItem(SYNC_URL_KEY); setSyncUrl(""); setShowSettings(false); }}
@@ -926,7 +1027,7 @@
                         disabled={!newLabelName.trim()}
                         style={{
                           fontSize:"13px",padding:"5px 14px",borderRadius:"7px",cursor:"pointer",fontWeight:"500",
-                          background: newLabelName.trim() ? "#a855f7" : "#e5e7eb",
+                          background: newLabelName.trim() ? accentColor : "#e5e7eb",
                           color: newLabelName.trim() ? "white" : "#9ca3af",
                           border:"none",
                         }}
@@ -961,7 +1062,7 @@
                     style={{
                       borderRadius:"12px", padding:"12px", textAlign:"left", border:`1px solid ${c.border}`,
                       background: c.bg, transition:"all 0.15s", cursor:"pointer",
-                      outline: activeCategory === cat ? "2px solid #a855f7" : "none", outlineOffset:"2px",
+                      outline: activeCategory === cat ? `2px solid ${accentColor}` : "none", outlineOffset:"2px",
                     }}
                   >
                     <div style={{fontSize:"12px",fontWeight:"600",color:c.text,marginBottom:"4px"}}>{cat}</div>
@@ -973,7 +1074,7 @@
                     key={cat}
                     onClick={() => setActiveCategory(activeCategory === cat ? "All" : cat)}
                     className={`rounded-xl p-3 text-left border transition-all ${c.bg} ${c.border}`}
-                    style={activeCategory === cat ? {outline:"2px solid #a855f7", outlineOffset:"2px"} : {}}
+                    style={activeCategory === cat ? {outline:`2px solid ${accentColor}`, outlineOffset:"2px"} : {}}
                   >
                     <div className={`text-xs font-semibold ${c.text} mb-1`}>{cat}</div>
                     <div className={`text-2xl font-bold ${c.text}`}>{count}</div>
@@ -1100,7 +1201,7 @@
                             if (e.key === "Enter") e.target.blur();
                             if (e.key === "Escape") setEditingText(null);
                           }}
-                          style={{width:"100%",fontSize:"14px",border:"1px solid #a855f7",borderRadius:"6px",padding:"2px 8px",outline:"none"}}
+                          style={{width:"100%",fontSize:"14px",border:`1px solid ${accentColor}`,borderRadius:"6px",padding:"2px 8px",outline:"none"}}
                         />
                       ) : (
                         <span
@@ -1136,7 +1237,7 @@
                           value={item.dueDate}
                           onChange={e => setDueDate(item.id, e.target.value)}
                           onBlur={() => setEditingDate(null)}
-                          style={{fontSize:"12px",border:"1px solid #a855f7",borderRadius:"6px",padding:"2px 6px",outline:"none"}}
+                          style={{fontSize:"12px",border:`1px solid ${accentColor}`,borderRadius:"6px",padding:"2px 6px",outline:"none"}}
                         />
                       ) : (
                         <button
@@ -1232,7 +1333,7 @@
                             setEditingCategory(null);
                           }}
                           onBlur={() => setEditingCategory(null)}
-                          style={{fontSize:"12px",border:"1px solid #a855f7",borderRadius:"7px",padding:"2px 6px",outline:"none",background:"white",cursor:"pointer"}}
+                          style={{fontSize:"12px",border:`1px solid ${accentColor}`,borderRadius:"7px",padding:"2px 6px",outline:"none",background:"white",cursor:"pointer"}}
                         >
                           <option value="" disabled>Add label…</option>
                           {Object.keys(allCategoryColors).filter(cat => !(item.categories||[]).includes(cat)).map(cat => (
