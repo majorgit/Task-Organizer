@@ -151,18 +151,62 @@
       Videos:        { bg: "bg-pink-100",   text: "text-pink-700",   border: "border-pink-200"   },
     };
 
-    const COLOR_PRESETS = [
-      { label: "Red",    bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5" },
-      { label: "Orange", bg: "#ffedd5", text: "#c2410c", border: "#fdba74" },
-      { label: "Yellow", bg: "#fef9c3", text: "#a16207", border: "#fde047" },
-      { label: "Green",  bg: "#dcfce7", text: "#15803d", border: "#86efac" },
-      { label: "Teal",   bg: "#ccfbf1", text: "#0f766e", border: "#5eead4" },
-      { label: "Blue",   bg: "#dbeafe", text: "#1d4ed8", border: "#93c5fd" },
-      { label: "Indigo", bg: "#e0e7ff", text: "#4338ca", border: "#a5b4fc" },
-      { label: "Purple", bg: "#f3e8ff", text: "#7e22ce", border: "#d8b4fe" },
-      { label: "Pink",   bg: "#fce7f3", text: "#be185d", border: "#f9a8d4" },
-      { label: "Gray",   bg: "#f3f4f6", text: "#374151", border: "#d1d5db" },
-    ];
+    // COLOR_PRESETS: grouped into three palettes
+    const COLOR_PRESETS = {
+      Pastel: [
+        { label: "Rose",    bg: "#fff1f2", text: "#be123c", border: "#fecdd3" },
+        { label: "Red",     bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5" },
+        { label: "Orange",  bg: "#ffedd5", text: "#c2410c", border: "#fdba74" },
+        { label: "Amber",   bg: "#fef3c7", text: "#b45309", border: "#fcd34d" },
+        { label: "Yellow",  bg: "#fef9c3", text: "#a16207", border: "#fde047" },
+        { label: "Lime",    bg: "#f7fee7", text: "#4d7c0f", border: "#bef264" },
+        { label: "Green",   bg: "#dcfce7", text: "#15803d", border: "#86efac" },
+        { label: "Emerald", bg: "#d1fae5", text: "#065f46", border: "#6ee7b7" },
+        { label: "Teal",    bg: "#ccfbf1", text: "#0f766e", border: "#5eead4" },
+        { label: "Cyan",    bg: "#cffafe", text: "#0e7490", border: "#67e8f9" },
+        { label: "Sky",     bg: "#e0f2fe", text: "#0369a1", border: "#7dd3fc" },
+        { label: "Blue",    bg: "#dbeafe", text: "#1d4ed8", border: "#93c5fd" },
+        { label: "Indigo",  bg: "#e0e7ff", text: "#4338ca", border: "#a5b4fc" },
+        { label: "Violet",  bg: "#ede9fe", text: "#6d28d9", border: "#c4b5fd" },
+        { label: "Purple",  bg: "#f3e8ff", text: "#7e22ce", border: "#d8b4fe" },
+        { label: "Fuchsia", bg: "#fdf4ff", text: "#a21caf", border: "#f0abfc" },
+        { label: "Pink",    bg: "#fce7f3", text: "#be185d", border: "#f9a8d4" },
+        { label: "Stone",   bg: "#f5f5f4", text: "#44403c", border: "#d6d3d1" },
+        { label: "Gray",    bg: "#f3f4f6", text: "#374151", border: "#d1d5db" },
+        { label: "Slate",   bg: "#f1f5f9", text: "#334155", border: "#cbd5e1" },
+      ],
+      Vivid: [
+        { label: "Crimson",  bg: "#dc2626", text: "#ffffff", border: "#b91c1c" },
+        { label: "Tomato",   bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
+        { label: "Coral",    bg: "#f97316", text: "#ffffff", border: "#ea580c" },
+        { label: "Gold",     bg: "#eab308", text: "#ffffff", border: "#ca8a04" },
+        { label: "Grass",    bg: "#22c55e", text: "#ffffff", border: "#16a34a" },
+        { label: "Forest",   bg: "#16a34a", text: "#ffffff", border: "#15803d" },
+        { label: "Ocean",    bg: "#0ea5e9", text: "#ffffff", border: "#0284c7" },
+        { label: "Navy",     bg: "#2563eb", text: "#ffffff", border: "#1d4ed8" },
+        { label: "Royal",    bg: "#4f46e5", text: "#ffffff", border: "#4338ca" },
+        { label: "Grape",    bg: "#9333ea", text: "#ffffff", border: "#7e22ce" },
+        { label: "Magenta",  bg: "#d946ef", text: "#ffffff", border: "#c026d3" },
+        { label: "Hot Pink", bg: "#ec4899", text: "#ffffff", border: "#db2777" },
+        { label: "Charcoal", bg: "#374151", text: "#ffffff", border: "#1f2937" },
+        { label: "Midnight", bg: "#1e293b", text: "#ffffff", border: "#0f172a" },
+        { label: "Teal D",   bg: "#0f766e", text: "#ffffff", border: "#0d9488" },
+      ],
+      Muted: [
+        { label: "Dusty Rose",  bg: "#e8d5d5", text: "#7f3f3f", border: "#d4a8a8" },
+        { label: "Terracotta",  bg: "#e8d5c4", text: "#7a4a2a", border: "#d4b89a" },
+        { label: "Sand",        bg: "#f0e6c8", text: "#6b5020", border: "#ddc88a" },
+        { label: "Sage",        bg: "#d4e6d4", text: "#2d5a2d", border: "#a8c8a8" },
+        { label: "Moss",        bg: "#c8d9c0", text: "#3a5230", border: "#9ab88e" },
+        { label: "Steel",       bg: "#c8d8e8", text: "#2a4a6a", border: "#94b4d4" },
+        { label: "Denim",       bg: "#c0cfe0", text: "#1e3a5f", border: "#8aaac8" },
+        { label: "Lavender",    bg: "#ddd8f0", text: "#4a3a7a", border: "#b8b0d8" },
+        { label: "Mauve",       bg: "#e8d4e8", text: "#6a2a6a", border: "#c8a0c8" },
+        { label: "Dusty Pink",  bg: "#ecd5df", text: "#7a2a4a", border: "#d4a0b8" },
+        { label: "Warm Gray",   bg: "#e8e0d8", text: "#4a4038", border: "#c8b8a8" },
+        { label: "Cool Gray",   bg: "#d8e0e8", text: "#304050", border: "#a8b8c8" },
+      ],
+    };
 
     const statusStyles = {
       todo:       { label: "To Do",       badge: "bg-gray-100 text-gray-600"   },
@@ -334,7 +378,7 @@
       const [newTaskDueDate, setNewTaskDueDate] = useState("");
       const [showAddLabel, setShowAddLabel]     = useState(false);
       const [newLabelName, setNewLabelName]     = useState("");
-      const [newLabelColor, setNewLabelColor]   = useState(COLOR_PRESETS[5]);
+      const [newLabelColor, setNewLabelColor]   = useState(COLOR_PRESETS.Pastel[11]); // Blue
       const [editingDate, setEditingDate]       = useState(null);
       const [editingText, setEditingText]       = useState(null);
       const [hoveredId, setHoveredId]           = useState(null);
@@ -708,29 +752,35 @@
               <div style={{marginTop:"18px",paddingTop:"18px",borderTop:"1px solid #e5e7eb"}}>
                 <div style={{fontWeight:"600",fontSize:"14px",color:"#374151",marginBottom:"10px"}}>Labels</div>
 
-                {/* Existing custom labels */}
-                {customCategories.length > 0 && (
-                  <div style={{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"10px"}}>
-                    {customCategories.map(c => (
-                      <span key={c.name} style={{
-                        display:"inline-flex",alignItems:"center",gap:"4px",
-                        fontSize:"12px",padding:"3px 8px",borderRadius:"9999px",fontWeight:"500",
-                        background:c.bg,color:c.text,border:`1px solid ${c.border}`,
-                      }}>
-                        {c.name}
-                        <button
-                          onClick={() => deleteCustomCategory(c.name)}
-                          title="Remove label"
-                          style={{background:"none",border:"none",cursor:"pointer",padding:"0 0 0 2px",fontSize:"12px",color:c.text,lineHeight:1,opacity:0.7}}
-                        >×</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {/* All labels: default (locked) + custom (deletable) */}
+                <div style={{display:"flex",flexWrap:"wrap",gap:"6px",marginBottom:"12px"}}>
+                  {/* Default labels — locked, shown for reference */}
+                  {Object.entries(categoryColors).map(([name, c]) => (
+                    <span key={name} className={`text-xs px-2 py-1 rounded-full font-medium ${c.bg} ${c.text}`}
+                      title="Built-in label" style={{opacity:0.8}}>
+                      {name}
+                    </span>
+                  ))}
+                  {/* Custom labels — deletable */}
+                  {customCategories.map(c => (
+                    <span key={c.name} style={{
+                      display:"inline-flex",alignItems:"center",gap:"4px",
+                      fontSize:"12px",padding:"3px 8px",borderRadius:"9999px",fontWeight:"500",
+                      background:c.bg,color:c.text,border:`1px solid ${c.border}`,
+                    }}>
+                      {c.name}
+                      <button
+                        onClick={() => deleteCustomCategory(c.name)}
+                        title="Remove label"
+                        style={{background:"none",border:"none",cursor:"pointer",padding:"0 0 0 2px",fontSize:"13px",color:c.text,lineHeight:1,opacity:0.65,fontWeight:"bold"}}
+                      >×</button>
+                    </span>
+                  ))}
+                </div>
 
                 {/* Add new label */}
                 {showAddLabel ? (
-                  <div style={{background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:"10px",padding:"12px",display:"flex",flexDirection:"column",gap:"10px"}}>
+                  <div style={{background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:"10px",padding:"14px",display:"flex",flexDirection:"column",gap:"12px"}}>
                     <input
                       type="text"
                       placeholder="Label name…"
@@ -738,31 +788,41 @@
                       onChange={e => setNewLabelName(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") addCustomCategory(); if (e.key === "Escape") setShowAddLabel(false); }}
                       autoFocus
-                      style={{fontSize:"13px",border:"1px solid #d1d5db",borderRadius:"7px",padding:"5px 10px",outline:"none"}}
+                      style={{fontSize:"13px",border:"1px solid #d1d5db",borderRadius:"7px",padding:"6px 10px",outline:"none"}}
                     />
                     <div>
-                      <div style={{fontSize:"12px",color:"#6b7280",marginBottom:"6px"}}>Color</div>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:"5px"}}>
-                        {COLOR_PRESETS.map(preset => (
-                          <button
-                            key={preset.label}
-                            title={preset.label}
-                            onClick={() => setNewLabelColor(preset)}
-                            style={{
-                              width:"22px",height:"22px",borderRadius:"50%",cursor:"pointer",
-                              background:preset.bg,border:`2px solid ${newLabelColor.label === preset.label ? preset.text : preset.border}`,
-                              outline: newLabelColor.label === preset.label ? `2px solid ${preset.text}` : "none",
-                              outlineOffset:"1px",
-                            }}
-                          />
-                        ))}
-                      </div>
+                      <div style={{fontSize:"12px",color:"#6b7280",marginBottom:"8px"}}>Color</div>
+                      {Object.entries(COLOR_PRESETS).map(([paletteName, palette]) => (
+                        <div key={paletteName} style={{marginBottom:"8px"}}>
+                          <div style={{fontSize:"11px",color:"#9ca3af",marginBottom:"4px",fontWeight:"500",letterSpacing:"0.05em",textTransform:"uppercase"}}>{paletteName}</div>
+                          <div style={{display:"flex",flexWrap:"wrap",gap:"4px"}}>
+                            {palette.map(preset => (
+                              <button
+                                key={preset.label}
+                                title={preset.label}
+                                onClick={() => setNewLabelColor(preset)}
+                                style={{
+                                  width:"20px",height:"20px",borderRadius:"50%",cursor:"pointer",flexShrink:0,
+                                  background:preset.bg,
+                                  border: newLabelColor.label === preset.label ? `3px solid ${preset.text}` : `2px solid ${preset.border}`,
+                                  outline: newLabelColor.label === preset.label ? `2px solid ${preset.text}` : "none",
+                                  outlineOffset:"2px",
+                                  transition:"transform 0.1s",
+                                  transform: newLabelColor.label === preset.label ? "scale(1.25)" : "scale(1)",
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                       {newLabelName.trim() && (
-                        <span style={{
-                          display:"inline-block",marginTop:"8px",fontSize:"12px",padding:"2px 10px",
-                          borderRadius:"9999px",fontWeight:"500",
-                          background:newLabelColor.bg,color:newLabelColor.text,border:`1px solid ${newLabelColor.border}`,
-                        }}>{newLabelName.trim()}</span>
+                        <div style={{marginTop:"8px",display:"flex",alignItems:"center",gap:"8px"}}>
+                          <span style={{fontSize:"12px",color:"#6b7280"}}>Preview:</span>
+                          <span style={{
+                            fontSize:"12px",padding:"2px 10px",borderRadius:"9999px",fontWeight:"500",
+                            background:newLabelColor.bg,color:newLabelColor.text,border:`1px solid ${newLabelColor.border}`,
+                          }}>{newLabelName.trim()}</span>
+                        </div>
                       )}
                     </div>
                     <div style={{display:"flex",gap:"6px"}}>
