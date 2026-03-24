@@ -151,6 +151,16 @@
       Videos:        { bg: "bg-pink-100",   text: "text-pink-700",   border: "border-pink-200"   },
     };
 
+    // Hex equivalents of the default Tailwind-based labels (for the edit form color picker)
+    const defaultLabelHex = {
+      IRB:           { bg: "#fee2e2", text: "#b91c1c", border: "#fecaca" },
+      Contacts:      { bg: "#dbeafe", text: "#1d4ed8", border: "#bfdbfe" },
+      Research:      { bg: "#f3e8ff", text: "#7e22ce", border: "#e9d5ff" },
+      "Paper Ideas": { bg: "#fef9c3", text: "#a16207", border: "#fef08a" },
+      Reading:       { bg: "#dcfce7", text: "#15803d", border: "#bbf7d0" },
+      Videos:        { bg: "#fce7f3", text: "#be185d", border: "#fbcfe8" },
+    };
+
     // COLOR_PRESETS: grouped into three palettes
     const COLOR_PRESETS = {
       Pastel: [
@@ -519,10 +529,15 @@
         localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updated));
       };
 
-      const openEditLabel = (cat) => {
-        setEditingLabelName(cat.name);
-        setEditLabelNewName(cat.name);
-        setEditLabelNewColor({ label: cat.label || cat.name, bg: cat.bg, text: cat.text, border: cat.border });
+      const openEditLabel = (labelName) => {
+        const custom = customCategories.find(c => c.name === labelName);
+        const hexFallback = defaultLabelHex[labelName] || COLOR_PRESETS.Pastel[11];
+        const color = custom
+          ? { label: custom.name, bg: custom.bg, text: custom.text, border: custom.border }
+          : { label: labelName, ...hexFallback };
+        setEditingLabelName(labelName);
+        setEditLabelNewName(labelName);
+        setEditLabelNewColor(color);
         setShowEditLabel(true);
         setShowAddLabel(false);
       };
@@ -531,10 +546,23 @@
         const newName = editLabelNewName.trim();
         if (!newName) return;
         const oldName = editingLabelName;
-        // Update customCategoriesAll
-        const updatedCats = { ...customCategoriesAll, [activeWorkspace]: customCategories.map(c =>
-          c.name === oldName ? { ...editLabelNewColor, name: newName, isCustom: true } : c
-        )};
+        const isDefault = !customCategories.find(c => c.name === oldName);
+        let updatedCats;
+        if (isDefault) {
+          // Convert default label → custom: hide from defaults, add to custom
+          updatedCats = { ...customCategoriesAll, [activeWorkspace]: [...customCategories, { ...editLabelNewColor, name: newName, isCustom: true }] };
+          if (newName === oldName) {
+            // Color-only change on default: just add the override as custom
+          } else {
+            deleteDefaultCategory(oldName);
+          }
+          // Always hide the original default since it's now customised
+          deleteDefaultCategory(oldName);
+        } else {
+          updatedCats = { ...customCategoriesAll, [activeWorkspace]: customCategories.map(c =>
+            c.name === oldName ? { ...editLabelNewColor, name: newName, isCustom: true } : c
+          )};
+        }
         setCustomCategoriesAll(updatedCats);
         localStorage.setItem("research-dashboard-categories-v2", JSON.stringify(updatedCats));
         // Rename label in all tasks in this workspace
@@ -1045,14 +1073,11 @@
                           <div style={{fontSize:"12px",color:"#6b7280",marginBottom:"5px"}}>Label to edit</div>
                           <select
                             value={editingLabelName}
-                            onChange={e => {
-                              const c = customCategories.find(x => x.name === e.target.value);
-                              if (c) openEditLabel(c);
-                            }}
+                            onChange={e => openEditLabel(e.target.value)}
                             style={{width:"100%",fontSize:"13px",border:"1px solid #d1d5db",borderRadius:"7px",padding:"6px 10px",outline:"none",background:"white",cursor:"pointer"}}
                           >
-                            {customCategories.map(c => (
-                              <option key={c.name} value={c.name}>{c.name}</option>
+                            {Object.keys(allCategoryColors).map(name => (
+                              <option key={name} value={name}>{name}</option>
                             ))}
                           </select>
                         </div>
@@ -1125,9 +1150,9 @@
                       onClick={() => { setShowAddLabel(true); setShowEditLabel(false); }}
                       style={{fontSize:"13px",padding:"5px 12px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px dashed #d1d5db",color:"#6b7280",display:"flex",alignItems:"center",gap:"4px"}}
                     >+ New label</button>
-                    {customCategories.length > 0 && (
+                    {Object.keys(allCategoryColors).length > 0 && (
                       <button
-                        onClick={() => { openEditLabel(customCategories[0]); }}
+                        onClick={() => { openEditLabel(Object.keys(allCategoryColors)[0]); }}
                         style={{fontSize:"13px",padding:"5px 12px",borderRadius:"7px",cursor:"pointer",background:"#f3f4f6",border:"1px solid #e5e7eb",color:"#6b7280",display:"flex",alignItems:"center",gap:"4px"}}
                       >✏️ Edit label</button>
                     )}
