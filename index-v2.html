@@ -409,8 +409,15 @@
 
       const saveSyncUrl = () => {
         const url = syncUrlInput.trim();
-        localStorage.setItem(SYNC_URL_KEY, url);
-        setSyncUrl(url);
+        if (url) {
+          localStorage.setItem(SYNC_URL_KEY, url);
+          setSyncUrl(url);
+        } else {
+          // Empty → reset to built-in default
+          localStorage.removeItem(SYNC_URL_KEY);
+          setSyncUrlInput(DEFAULT_SYNC_URL);
+          setSyncUrl(DEFAULT_SYNC_URL);
+        }
         setShowSettings(false);
       };
 
